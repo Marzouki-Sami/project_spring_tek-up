@@ -1,0 +1,8 @@
+body { min-height: 100vh; }
+.table td, .table th { vertical-align: middle; }
+.table code { white-space: nowrap; }
+.actions { white-space: nowrap; }
+.actions form { display: inline; margin: 0; }
+.actions .btn + form, .actions form + .btn { margin-left: .25rem; }
+.num { text-align: right; white-space: nowrap; }
+.empty { color: var(--bs-secondary-color); padding: 2rem 0; text-align: center; }
