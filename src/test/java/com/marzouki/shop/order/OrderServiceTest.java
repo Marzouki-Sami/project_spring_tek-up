@@ -37,6 +37,7 @@ class OrderServiceTest {
     @Autowired CategoryRepository categories;
     @Autowired SubcategoryRepository subcategories;
     @Autowired StockMovementRepository movements;
+    @Autowired OrderRepository orderRepository;
     @jakarta.persistence.PersistenceContext jakarta.persistence.EntityManager em;
 
     User buyer;
@@ -190,5 +191,33 @@ class OrderServiceTest {
         User other = users.create("Oz", "Other", "oz@example.com", TestPasswords.strong(), Role.CUSTOMER);
 
         assertThatThrownBy(() -> orders.getOwned(order.getId(), other.getId())).isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void anOrderIsRefusedWhenTheTotalChangedSinceTheCustomerSawIt() {
+        Cart cart = new Cart();
+        carts.add(cart, lamp.getId(), 2);
+        ShippingForm form = address();
+        form.setExpectedTotal(new BigDecimal("39.00"));
+        assertThatThrownBy(() -> orders.place(buyer.getId(), form, cart))
+                .isInstanceOf(ConflictException.class).hasMessageContaining("changed");
+        assertThat(stockOf(lamp.getId())).isEqualTo(5);
+
+        form.setExpectedTotal(new BigDecimal("40.00"));
+        assertThat(orders.place(buyer.getId(), form, cart).getTotal()).isEqualByComparingTo("40.00");
+    }
+
+    @Test
+    void aStatusChangeThatLostARaceIsRefusedAndRestocksOnlyOnce() {
+        Cart cart = new Cart();
+        carts.add(cart, lamp.getId(), 2);
+        Order order = orders.place(buyer.getId(), address(), cart);
+
+        // Someone else cancels first; this caller still sees the order as placed.
+        orderRepository.transition(order.getId(), OrderStatus.PLACED, OrderStatus.CANCELLED);
+
+        assertThatThrownBy(() -> orders.cancelOwn(order.getId(), buyer.getId()))
+                .isInstanceOf(ConflictException.class).hasMessageContaining("just changed");
+        assertThat(stockOf(lamp.getId())).isEqualTo(3);
     }
 }

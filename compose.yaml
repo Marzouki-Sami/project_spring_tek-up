@@ -39,6 +39,7 @@ services:
       DB_USERNAME: root
       JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET first (see the top of this file)}"
       MAIL_ENABLED: "true"
+      SESSION_COOKIE_SECURE: "false"   # plain HTTP on localhost; keep the default (true) behind HTTPS
       SMTP_HOST: mail
       SMTP_PORT: "1025"
       APP_BASE_URL: http://localhost:8081

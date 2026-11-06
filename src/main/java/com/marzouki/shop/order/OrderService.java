@@ -40,6 +40,12 @@ public class OrderService {
         if (view.isEmpty()) {
             throw new ConflictException("Your cart is empty");
         }
+        boolean changed = view.lines().stream().anyMatch(CartView.Line::limited)
+                || (shipping.getExpectedTotal() != null && shipping.getExpectedTotal().compareTo(view.total()) != 0);
+        if (changed) {
+            throw new ConflictException("Prices or availability changed while you were checking out. "
+                    + "Please review the updated total and confirm again.");
+        }
         Coupon coupon = null;
         if (view.couponCode() != null) {
             coupon = coupons.findByCodeIgnoreCase(view.couponCode())
@@ -126,6 +132,9 @@ public class OrderService {
         if (!order.getStatus().canMoveTo(target)) {
             throw new ConflictException("An order that is " + order.getStatus().getLabel().toLowerCase()
                     + " cannot become " + target.getLabel().toLowerCase());
+        }
+        if (orders.transition(order.getId(), order.getStatus(), target) == 0) {
+            throw new ConflictException("This order was just changed by someone else. Reload the page and try again.");
         }
         if (target == OrderStatus.CANCELLED) {
             for (OrderItem item : order.getItems()) {

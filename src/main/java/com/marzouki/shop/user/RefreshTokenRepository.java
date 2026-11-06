@@ -14,4 +14,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("update RefreshToken t set t.revoked = true where t.user.id = :userId and t.revoked = false")
     int revokeAllForUser(@org.springframework.data.repository.query.Param("userId") Long userId);
+
+    /** Uses up a token exactly once: returns 1 for the single caller that wins, 0 for everyone else. */
+    @Modifying(flushAutomatically = true)
+    @Query("update RefreshToken t set t.revoked = true where t.id = :id and t.revoked = false")
+    int revokeIfActive(@org.springframework.data.repository.query.Param("id") Long id);
 }

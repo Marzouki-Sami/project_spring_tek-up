@@ -28,4 +28,7 @@ public class ShippingForm {
     @NotBlank(message = "Enter the country")
     @Size(max = 80, message = "Use at most 80 characters")
     private String country;
+
+    /** The total the customer saw on the checkout page; the order is refused if it no longer matches. */
+    private java.math.BigDecimal expectedTotal;
 }

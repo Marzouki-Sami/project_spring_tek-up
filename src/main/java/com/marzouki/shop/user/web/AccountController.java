@@ -59,7 +59,8 @@ public class AccountController {
     @PostMapping("/password")
     public String changePassword(@AuthenticationPrincipal AppUserDetails me,
                                  @Valid @ModelAttribute("password") PasswordChangeForm form, BindingResult result,
-                                 Model model, RedirectAttributes flash) {
+                                 Model model, HttpServletRequest request, HttpServletResponse response,
+                                 RedirectAttributes flash) {
         if (!result.hasFieldErrors("newPassword") && !result.hasFieldErrors("confirmPassword")
                 && !form.getNewPassword().equals(form.getConfirmPassword())) {
             result.rejectValue("confirmPassword", "mismatch", "The passwords do not match");
@@ -67,6 +68,7 @@ public class AccountController {
         if (!result.hasErrors()) {
             try {
                 users.changePassword(me.getId(), form);
+                sessionLogin.start(users.get(me.getId()), request, response);
                 flash.addFlashAttribute("success", "Your password was changed");
                 return "redirect:/account";
             } catch (ConflictException e) {

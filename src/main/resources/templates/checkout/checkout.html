@@ -10,6 +10,7 @@
             <form class="panel" th:action="@{/checkout}" th:object="${form}" method="post" novalidate>
                 <h2 class="h5 mb-3">Delivery address</h2>
                 <div class="alert alert-danger" role="alert" th:if="${#fields.hasGlobalErrors()}" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+                <input type="hidden" th:field="*{expectedTotal}">
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="form-label" for="fullName">Full name</label>

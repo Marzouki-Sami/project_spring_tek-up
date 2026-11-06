@@ -70,6 +70,8 @@ jobs:
           DB_URL: jdbc:mysql://127.0.0.1:3306/shop
           DB_USERNAME: root
           DB_PASSWORD: ""
+          MAIL_ENABLED: "false"
+          SESSION_COOKIE_SECURE: "false"
         run: ./mvnw -B test
 
   docker:

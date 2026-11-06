@@ -75,7 +75,7 @@ With MySQL:
 
 ```bash
 DB_URL=jdbc:mysql://localhost:3306/shop DB_USERNAME=shop DB_PASSWORD=... \
-JWT_SECRET=$(openssl rand -base64 48) \
+JWT_SECRET=$(openssl rand -base64 48) MAIL_ENABLED=false \
   ./mvnw spring-boot:run -Dspring-boot.run.profiles=mysql
 ```
 
