@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Suppliers')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('suppliers')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Suppliers</h1>
+        <a class="btn btn-primary" href="/suppliers/new">New supplier</a>
+    </div>
+    <p class="empty" th:if="${#lists.isEmpty(suppliers)}">No suppliers yet.</p>
+    <div class="table-responsive" th:unless="${#lists.isEmpty(suppliers)}">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${suppliers}">
+                    <td><span th:text="${item.company}"></span></td>
+                    <td><span th:text="${item.contactName}"></span></td>
+                    <td><span th:text="${item.email}"></span></td>
+                    <td><span th:text="${item.phone}"></span></td>
+                    <td><span class="badge" th:classappend="${item.active} ? text-bg-success : text-bg-secondary" th:text="${item.active} ? 'Active' : 'Inactive'"></span></td>
+                    <td class="text-end actions">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/suppliers/{id}/edit(id=${item.id})}">Edit</a>
+                        <form th:action="@{/suppliers/{id}/delete(id=${item.id})}" method="post"
+                              th:attr="onsubmit=|return confirm('Delete this ')|">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
