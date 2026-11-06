@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Coupons')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('coupons')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <h1 class="h3 mb-3">Coupons</h1>
+    <form class="panel mb-4" th:action="@{/manage/coupons}" th:object="${form}" method="post" novalidate>
+        <h2 class="h6 mb-3">New coupon</h2>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label" for="code">Code</label>
+                <input class="form-control" id="code" th:field="*{code}" th:errorclass="is-invalid" placeholder="SPRING10">
+                <div class="invalid-feedback" th:errors="*{code}"></div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="percentOff">Percent off</label>
+                <input class="form-control" id="percentOff" type="number" th:field="*{percentOff}" th:errorclass="is-invalid">
+                <div class="invalid-feedback" th:errors="*{percentOff}"></div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="expiresOn">Last valid day <span class="text-secondary">(optional)</span></label>
+                <input class="form-control" id="expiresOn" type="date" th:field="*{expiresOn}" th:errorclass="is-invalid">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="maxUses">Max uses <span class="text-secondary">(optional)</span></label>
+                <input class="form-control" id="maxUses" type="number" th:field="*{maxUses}" th:errorclass="is-invalid">
+                <div class="invalid-feedback" th:errors="*{maxUses}"></div>
+            </div>
+            <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">Create</button></div>
+        </div>
+    </form>
+    <p class="empty" th:if="${#lists.isEmpty(coupons)}">No coupons yet.</p>
+    <div class="panel p-0 table-responsive" th:unless="${#lists.isEmpty(coupons)}">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Code</th><th class="num">Discount</th><th>Valid until</th><th class="num">Used</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                <tr th:each="c : ${coupons}">
+                    <td><code th:text="${c.code}">CODE</code></td>
+                    <td class="num" th:text="${c.percentOff} + '%'">10%</td>
+                    <td th:text="${c.expiresAt != null} ? ${#temporals.format(c.expiresAt, 'd MMM yyyy')} : 'No expiry'">-</td>
+                    <td class="num" th:text="${c.usedCount} + (${c.maxUses != null} ? ' / ' + ${c.maxUses} : '')">0</td>
+                    <td>
+                        <span class="badge text-bg-success" th:if="${c.problemAt(now) == null}">Usable</span>
+                        <span class="badge text-bg-secondary" th:unless="${c.problemAt(now) == null}" th:text="${c.problemAt(now)}">Problem</span>
+                    </td>
+                    <td class="text-end actions">
+                        <form th:action="@{/manage/coupons/{id}/active(id=${c.id})}" method="post">
+                            <input type="hidden" name="active" th:value="${!c.active}">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit" th:text="${c.active} ? 'Disable' : 'Enable'">Disable</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main><footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

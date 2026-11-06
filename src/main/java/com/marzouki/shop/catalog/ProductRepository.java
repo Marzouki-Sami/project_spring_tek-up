@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -32,6 +33,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @EntityGraph(attributePaths = {"subcategory", "subcategory.category"})
     Optional<Product> findByIdAndActiveTrue(Long id);
+
+    /** Takes stock only if enough is left, in one atomic statement so two buyers can never oversell. */
+    @Modifying(flushAutomatically = true)
+    @Query("update Product p set p.stock = p.stock - :quantity where p.id = :id and p.active = true and p.stock >= :quantity")
+    int takeStock(@Param("id") Long id, @Param("quantity") int quantity);
+
+    @Modifying(flushAutomatically = true)
+    @Query("update Product p set p.stock = p.stock + :quantity where p.id = :id")
+    int returnStock(@Param("id") Long id, @Param("quantity") int quantity);
+
+    @EntityGraph(attributePaths = {"subcategory", "subcategory.category"})
+    List<Product> findByIdIn(java.util.Collection<Long> ids);
 
     boolean existsBySkuIgnoreCase(String sku);
 

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('My orders')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('account')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <h1 class="h3 mb-4">My orders</h1>
+    <div class="empty" th:if="${#lists.isEmpty(orders)}">
+        <p class="mb-3">You have not placed an order yet.</p>
+        <a class="btn btn-primary" th:href="@{/products}">Browse the shop</a>
+    </div>
+    <div class="panel p-0 table-responsive" th:unless="${#lists.isEmpty(orders)}">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Order</th><th>Date</th><th>Status</th><th class="num">Total</th><th></th></tr></thead>
+            <tbody>
+                <tr th:each="o : ${orders}">
+                    <td th:text="'#' + ${o.id}">#1</td>
+                    <td th:text="${#temporals.format(o.createdAt, 'd MMM yyyy')}">Date</td>
+                    <td><span class="badge" th:classappend="'text-bg-' + ${o.status.color}" th:text="${o.status.label}">Placed</span></td>
+                    <td class="num" th:text="${#numbers.formatDecimal(o.total, 1, 'COMMA', 2, 'POINT')} + ' €'">0</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-secondary" th:href="@{/account/orders/{id}(id=${o.id})}">View</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main><footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

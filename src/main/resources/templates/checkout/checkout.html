@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Checkout')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('cart')}"></nav>
+<main class="container">
+    <h1 class="h3 mb-4">Checkout</h1>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <form class="panel" th:action="@{/checkout}" th:object="${form}" method="post" novalidate>
+                <h2 class="h5 mb-3">Delivery address</h2>
+                <div class="alert alert-danger" role="alert" th:if="${#fields.hasGlobalErrors()}" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="fullName">Full name</label>
+                        <input class="form-control" id="fullName" th:field="*{fullName}" th:errorclass="is-invalid" autocomplete="name">
+                        <div class="invalid-feedback" th:errors="*{fullName}"></div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="address">Street address</label>
+                        <input class="form-control" id="address" th:field="*{address}" th:errorclass="is-invalid" autocomplete="street-address">
+                        <div class="invalid-feedback" th:errors="*{address}"></div>
+                    </div>
+                    <div class="col-sm-5">
+                        <label class="form-label" for="postalCode">Postal code</label>
+                        <input class="form-control" id="postalCode" th:field="*{postalCode}" th:errorclass="is-invalid" autocomplete="postal-code">
+                        <div class="invalid-feedback" th:errors="*{postalCode}"></div>
+                    </div>
+                    <div class="col-sm-7">
+                        <label class="form-label" for="city">City</label>
+                        <input class="form-control" id="city" th:field="*{city}" th:errorclass="is-invalid" autocomplete="address-level2">
+                        <div class="invalid-feedback" th:errors="*{city}"></div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="country">Country</label>
+                        <input class="form-control" id="country" th:field="*{country}" th:errorclass="is-invalid" autocomplete="country-name">
+                        <div class="invalid-feedback" th:errors="*{country}"></div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-lg w-100 mt-4" type="submit">Place order</button>
+                <p class="text-secondary small mt-3 mb-0"><i class="bi bi-info-circle"></i> Online payment is not available yet. This demo shop records the order only.</p>
+            </form>
+        </div>
+        <div class="col-lg-5">
+            <div class="panel">
+                <h2 class="h5 mb-3">Your order</h2>
+                <div class="d-flex justify-content-between mb-2" th:each="line : ${cart.lines}">
+                    <span><span th:text="${line.quantity}">1</span> × <span th:text="${line.product.name}">Product</span></span>
+                    <span th:text="${#numbers.formatDecimal(line.lineTotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0</span>
+                </div>
+                <hr>
+                <dl class="summary">
+                    <div th:if="${cart.discount.signum() > 0}"><dt th:text="'Discount (' + ${cart.couponCode} + ')'">Discount</dt><dd class="text-success" th:text="'- ' + ${#numbers.formatDecimal(cart.discount, 1, 'COMMA', 2, 'POINT')} + ' €'">0</dd></div>
+                    <div class="total"><dt>Total</dt><dd th:text="${#numbers.formatDecimal(cart.total, 1, 'COMMA', 2, 'POINT')} + ' €'">0</dd></div>
+                </dl>
+                <a th:href="@{/cart}">Edit cart</a>
+            </div>
+        </div>
+    </div>
+</main><footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

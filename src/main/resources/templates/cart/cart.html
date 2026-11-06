@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Your cart')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('cart')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <h1 class="h3 mb-4">Your cart</h1>
+    <div class="empty" th:if="${cart.empty}">
+        <p class="mb-3">Your cart is empty.</p>
+        <a class="btn btn-primary" th:href="@{/products}">Start shopping</a>
+    </div>
+    <div class="row g-4" th:unless="${cart.empty}">
+        <div class="col-lg-8">
+            <div class="panel p-0">
+                <div class="cart-line" th:each="line : ${cart.lines}">
+                    <div class="cart-thumb" th:classappend="'art-' + ${line.product.subcategory.category.id % 6}"><i class="bi bi-bag-heart"></i></div>
+                    <div class="cart-info">
+                        <a class="fw-semibold text-decoration-none" th:href="@{/products/{id}(id=${line.product.id})}" th:text="${line.product.name}">Product</a>
+                        <div class="text-secondary small" th:text="${#numbers.formatDecimal(line.product.price, 1, 'COMMA', 2, 'POINT')} + ' € each'">0 €</div>
+                        <div class="text-warning-emphasis small" th:if="${line.limited}">Reduced to the quantity in stock</div>
+                    </div>
+                    <form class="cart-qty" th:action="@{/cart/update}" method="post">
+                        <input type="hidden" name="productId" th:value="${line.product.id}">
+                        <label class="visually-hidden" th:for="'q' + ${line.product.id}">Quantity</label>
+                        <input class="form-control form-control-sm qty-input" th:id="'q' + ${line.product.id}" name="quantity" type="number" min="0" max="20" th:value="${line.quantity}">
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">Update</button>
+                    </form>
+                    <div class="cart-total num fw-semibold" th:text="${#numbers.formatDecimal(line.lineTotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0 €</div>
+                    <form th:action="@{/cart/remove}" method="post">
+                        <input type="hidden" name="productId" th:value="${line.product.id}">
+                        <button class="btn btn-sm btn-link text-danger" type="submit" aria-label="Remove"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel">
+                <h2 class="h5 mb-3">Summary</h2>
+                <form class="d-flex gap-2 mb-3" th:action="@{/cart/coupon}" method="post" th:unless="${cart.couponCode}">
+                    <input class="form-control form-control-sm" name="code" placeholder="Coupon code" aria-label="Coupon code" required>
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Apply</button>
+                </form>
+                <form class="d-flex justify-content-between align-items-center mb-3" th:action="@{/cart/coupon/remove}" method="post" th:if="${cart.couponCode}">
+                    <span class="badge text-bg-success"><i class="bi bi-ticket-perforated"></i> <span th:text="${cart.couponCode} + ' · ' + ${cart.percentOff} + '% off'">CODE</span></span>
+                    <button class="btn btn-sm btn-link" type="submit">Remove</button>
+                </form>
+                <dl class="summary">
+                    <div><dt>Subtotal</dt><dd th:text="${#numbers.formatDecimal(cart.subtotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0</dd></div>
+                    <div th:if="${cart.discount.signum() > 0}"><dt>Discount</dt><dd class="text-success" th:text="'- ' + ${#numbers.formatDecimal(cart.discount, 1, 'COMMA', 2, 'POINT')} + ' €'">0</dd></div>
+                    <div class="total"><dt>Total</dt><dd th:text="${#numbers.formatDecimal(cart.total, 1, 'COMMA', 2, 'POINT')} + ' €'">0</dd></div>
+                </dl>
+                <a class="btn btn-primary w-100" th:href="@{/checkout}">Checkout</a>
+                <p class="text-secondary small mt-3 mb-0" sec:authorize="!isAuthenticated()">You will be asked to sign in or create an account first. Your cart is kept.</p>
+            </div>
+        </div>
+    </div>
+</main><footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

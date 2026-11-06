@@ -9,6 +9,13 @@ for managers and a REST API with token authentication.
 ## What works today
 
 - **Storefront**: guests browse, search, filter and sort products without an account.
+- **Cart**: guests can fill a basket and keep it through sign-in; it is lost when the session ends.
+  Checkout needs an account.
+- **Orders**: delivery address, optional percentage coupon, live stock check, order history, customer
+  cancellation while an order is still placed, and a manager workflow
+  (placed, processing, shipped, delivered, cancelled). Stock is taken atomically so two buyers can never
+  oversell, every change is logged in stock_movements, and cancelling returns the items.
+- **Coupons** (/manage/coupons): percentage, optional expiry date and usage limit.
 - **Accounts**: sign-up with a strong-password policy, sign-in, profile and password change.
 - **Roles**: `CUSTOMER`, `MANAGER` (manages the catalog) and `ADMIN` (also manages users). Each role
   inherits what the roles below it can do.
@@ -66,6 +73,6 @@ validates that the entities match it.
 1. Foundation: Java 21, Spring Boot 3.5, Flyway, domain model, catalog pages, tests (done)
 2. Security: BCrypt passwords, form login, JWT for the API, roles, storefront (done)
 3. Catalog REST API with OpenAPI docs, dark mode (done)
-4. Cart (guest and signed-in), orders, stock movements and coupons
+4. Cart (guest and signed-in), orders, stock movements and coupons (done)
 5. Reviews, wishlist, emails and an admin dashboard
 6. Docker Compose, screenshots, release polish

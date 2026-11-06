@@ -22,8 +22,11 @@
                 <li class="nav-item"><a class="nav-link" th:classappend="${active == 'shop'} ? 'active'" th:href="@{/products}">Shop</a></li>
                 <li class="nav-item dropdown" sec:authorize="hasRole('MANAGER')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-                       th:classappend="${#strings.contains('products,categories,subcategories,suppliers', active)} and ${active != ''} ? 'active'">Manage</a>
+                       th:classappend="${#strings.contains('products,categories,subcategories,suppliers,orders,coupons', active)} and ${active != ''} ? 'active'">Manage</a>
                     <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/manage/orders}"><i class="bi bi-receipt"></i> Orders</a></li>
+                        <li><a class="dropdown-item" th:href="@{/manage/coupons}"><i class="bi bi-ticket-perforated"></i> Coupons</a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" th:href="@{/manage/products}"><i class="bi bi-box-seam"></i> Products</a></li>
                         <li><a class="dropdown-item" th:href="@{/manage/categories}"><i class="bi bi-tags"></i> Categories</a></li>
                         <li><a class="dropdown-item" th:href="@{/manage/subcategories}"><i class="bi bi-diagram-3"></i> Subcategories</a></li>
@@ -34,6 +37,7 @@
                     <a class="nav-link" th:classappend="${active == 'users'} ? 'active'" th:href="@{/admin/users}">Users</a>
                 </li>
             </ul>
+            <a class="cart-link me-2" th:href="@{/cart}" aria-label="Shopping cart"><i class="bi bi-cart3"></i><span class="cart-count" th:if="${cartCount > 0}" th:text="${cartCount}">2</span></a>
             <button type="button" class="theme-toggle me-2" data-theme-toggle aria-label="Switch between light and dark mode" title="Switch theme"><i class="bi bi-circle-half"></i></button>
             <div class="d-flex align-items-center gap-2" sec:authorize="!isAuthenticated()">
                 <a class="btn btn-link nav-signin" th:href="@{/login}">Sign in</a>
@@ -45,6 +49,7 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" th:href="@{/account}"><i class="bi bi-person"></i> My account</a></li>
+                    <li><a class="dropdown-item" th:href="@{/account/orders}"><i class="bi bi-bag-check"></i> My orders</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form th:action="@{/logout}" method="post" class="m-0">
