@@ -1,0 +1,6 @@
+.git
+.github
+target
+mail-outbox
+*.md
+!README.md

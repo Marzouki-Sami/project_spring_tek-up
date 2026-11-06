@@ -71,3 +71,14 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: ""
         run: ./mvnw -B test
+
+  docker:
+    # Proves the container image still builds and that the Compose file is valid.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -t spring-shop:ci .
+      - name: Validate the Compose file
+        run: JWT_SECRET=$(openssl rand -base64 48) docker compose config --quiet
