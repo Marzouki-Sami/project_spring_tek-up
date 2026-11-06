@@ -9,6 +9,11 @@ import org.springframework.data.repository.query.Param;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
+    /** Moves an order between statuses only if it is still in the expected one; 0 means someone else got there first. */
+    @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true)
+    @Query("update Order o set o.status = :to where o.id = :id and o.status = :from")
+    int transition(@Param("id") Long id, @Param("from") OrderStatus from, @Param("to") OrderStatus to);
+
     @Query("select count(i) > 0 from OrderItem i where i.order.user.id = :userId and i.product.id = :productId "
             + "and i.order.status <> com.marzouki.shop.order.OrderStatus.CANCELLED")
     boolean hasPurchased(@Param("userId") Long userId, @Param("productId") Long productId);

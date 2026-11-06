@@ -104,8 +104,9 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    SecurityFilterChain webChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(a -> a
+    SecurityFilterChain webChain(HttpSecurity http, com.marzouki.shop.user.UserRepository users) throws Exception {
+        http.addFilterBefore(new CurrentAccountFilter(users), org.springframework.security.web.access.intercept.AuthorizationFilter.class)
+                .authorizeHttpRequests(a -> a
                         .requestMatchers(PUBLIC_PAGES).permitAll()
                         .requestMatchers("/manage/**").hasRole("MANAGER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")

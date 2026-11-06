@@ -61,7 +61,10 @@ public class RefreshTokenService {
             token.setRevoked(true);
             throw new BadCredentialsException("Invalid refresh token");
         }
-        token.setRevoked(true);
+        if (tokens.revokeIfActive(token.getId()) == 0) {
+            tokens.revokeAllForUser(user.getId());
+            throw new BadCredentialsException("Invalid refresh token");
+        }
         return issue(user);
     }
 

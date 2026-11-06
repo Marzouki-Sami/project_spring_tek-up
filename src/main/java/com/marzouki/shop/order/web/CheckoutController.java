@@ -44,6 +44,7 @@ public class CheckoutController {
         }
         ShippingForm form = new ShippingForm();
         form.setFullName(me.getFullName());
+        form.setExpectedTotal(view.total());
         model.addAttribute("form", form);
         model.addAttribute("cart", view);
         return "checkout/checkout";
@@ -70,6 +71,7 @@ public class CheckoutController {
         if (view.isEmpty()) {
             return "redirect:/cart";
         }
+        form.setExpectedTotal(view.total());
         model.addAttribute("cart", view);
         return "checkout/checkout";
     }
