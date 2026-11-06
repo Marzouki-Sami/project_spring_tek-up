@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Order')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${manager} ? 'orders' : 'account')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <div class="alert alert-success" role="status" th:if="${param.placed}"><i class="bi bi-check-circle"></i> Thank you! Your order was placed.</div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="${manager} ? @{/manage/orders} : @{/account/orders}" th:text="${manager} ? 'Orders' : 'My orders'">Orders</a></li>
+            <li class="breadcrumb-item active" th:text="'Order #' + ${order.id}">Order</li>
+        </ol>
+    </nav>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 mb-0" th:text="'Order #' + ${order.id}">Order</h1>
+        <span class="badge fs-6" th:classappend="'text-bg-' + ${order.status.color}" th:text="${order.status.label}">Placed</span>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="panel p-0 table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Item</th><th class="num">Price</th><th class="num">Qty</th><th class="num">Total</th></tr></thead>
+                    <tbody>
+                        <tr th:each="i : ${order.items}">
+                            <td><span th:text="${i.name}">Name</span> <code class="text-secondary" th:text="${i.sku}">SKU</code></td>
+                            <td class="num" th:text="${#numbers.formatDecimal(i.unitPrice, 1, 'COMMA', 2, 'POINT')} + ' €'">0</td>
+                            <td class="num" th:text="${i.quantity}">1</td>
+                            <td class="num" th:text="${#numbers.formatDecimal(i.lineTotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel mb-4">
+                <dl class="summary">
+                    <div><dt>Subtotal</dt><dd th:text="${#numbers.formatDecimal(order.subtotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0</dd></div>
+                    <div th:if="${order.discount.signum() > 0}"><dt th:text="'Discount (' + ${order.couponCode} + ')'">Discount</dt><dd class="text-success" th:text="'- ' + ${#numbers.formatDecimal(order.discount, 1, 'COMMA', 2, 'POINT')} + ' €'">0</dd></div>
+                    <div class="total"><dt>Total</dt><dd th:text="${#numbers.formatDecimal(order.total, 1, 'COMMA', 2, 'POINT')} + ' €'">0</dd></div>
+                </dl>
+            </div>
+            <div class="panel mb-4">
+                <h2 class="h6">Delivery</h2>
+                <address class="mb-0">
+                    <span th:text="${order.fullName}">Name</span><br>
+                    <span th:text="${order.address}">Street</span><br>
+                    <span th:text="${order.postalCode + ' ' + order.city}">City</span><br>
+                    <span th:text="${order.country}">Country</span>
+                </address>
+                <p class="text-secondary small mt-3 mb-0" th:if="${manager}" th:text="'Customer: ' + ${order.user.fullName} + ' · ' + ${order.user.email}">Customer</p>
+            </div>
+            <form class="panel" th:if="${!manager and order.status.customerCanCancel()}" th:action="@{/account/orders/{id}/cancel(id=${order.id})}" method="post"
+                  data-confirm="Cancel this order?">
+                <button class="btn btn-outline-danger w-100" type="submit">Cancel order</button>
+            </form>
+            <div class="panel" th:if="${manager and !order.status.next().isEmpty()}">
+                <h2 class="h6 mb-3">Update status</h2>
+                <form class="mb-2" th:each="next : ${order.status.next()}" th:action="@{/manage/orders/{id}/status(id=${order.id})}" method="post"
+                      th:attr="data-confirm=${next.name() == 'CANCELLED'} ? 'Cancel this order and return the items to stock?' : null">
+                    <input type="hidden" name="status" th:value="${next}">
+                    <button class="btn w-100" th:classappend="${next.name() == 'CANCELLED'} ? 'btn-outline-danger' : 'btn-primary'" type="submit" th:text="${next.name() == 'CANCELLED'} ? 'Cancel order' : 'Mark as ' + ${next.label.toLowerCase()}">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main><footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

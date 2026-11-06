@@ -8,6 +8,17 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @ControllerAdvice
 public class CurrentUserAdvice {
 
+    private final com.marzouki.shop.cart.Cart cart;
+
+    CurrentUserAdvice(com.marzouki.shop.cart.Cart cart) {
+        this.cart = cart;
+    }
+
+    @ModelAttribute("cartCount")
+    int cartCount() {
+        return cart.itemCount();
+    }
+
     @ModelAttribute("currentUserName")
     String currentUserName(Authentication authentication) {
         if (authentication == null) {

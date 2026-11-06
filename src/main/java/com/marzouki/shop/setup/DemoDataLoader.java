@@ -39,6 +39,7 @@ public class DemoDataLoader implements ApplicationRunner {
     private final SubcategoryRepository subcategories;
     private final SupplierRepository suppliers;
     private final ProductRepository products;
+    private final com.marzouki.shop.order.OrderService orders;
 
     @Override
     @Transactional
@@ -75,7 +76,8 @@ public class DemoDataLoader implements ApplicationRunner {
         product("BAG-002", "Harbor Tote", "Waxed canvas tote for daily errands.", "54.00", 18, bags, atelier);
         product("SHO-001", "Trail Runner Sneakers", "Grippy, breathable sneakers for city and trail.", "119.00", 27, shoes, atelier);
         product("SHO-002", "Classic Leather Boots", "Handmade boots in full-grain leather.", "199.00", 4, shoes, atelier);
-        log.info("Demo data created. Sign in with admin@demo.shop, manager@demo.shop or customer@demo.shop using the passwords printed to the console above.");
+        orders.createCoupon("WELCOME10", 10, null, null);
+        log.info("Demo data created. Sign in with admin@demo.shop, manager@demo.shop or customer@demo.shop using the passwords printed to the console above. Coupon WELCOME10 gives 10% off.");
     }
 
     private void createAccount(String first, String last, String email, Role role) {

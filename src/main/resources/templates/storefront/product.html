@@ -25,6 +25,12 @@
                 <span class="badge text-bg-warning" th:if="${product.stock > 0 and product.stock <= 5}">Only <span th:text="${product.stock}">3</span> left</span>
                 <span class="badge text-bg-danger" th:if="${product.stock == 0}">Sold out</span>
             </p>
+            <form class="d-flex gap-2 align-items-center mb-3" th:if="${product.stock > 0}" th:action="@{/cart/add}" method="post">
+                <input type="hidden" name="productId" th:value="${product.id}">
+                <label class="visually-hidden" for="quantity">Quantity</label>
+                <input class="form-control qty-input" id="quantity" name="quantity" type="number" min="1" th:max="${product.stock < 20 ? product.stock : 20}" value="1">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-cart-plus"></i> Add to cart</button>
+            </form>
             <p class="text-secondary small">SKU <code th:text="${product.sku}">SKU</code></p>
         </div>
     </div>
