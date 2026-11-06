@@ -96,7 +96,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**", "/api/categories",
                                 "/api/categories/**").permitAll()
-                        .requestMatchers("/api/docs/**", "/api/openapi/**").permitAll()
+                        .requestMatchers("/api/docs", "/api/docs/**", "/api/openapi/**", "/api/swagger-ui/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(j -> j.decoder(decoder).jwtAuthenticationConverter(jwtConverter())));
         return http.build();

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${title} + ' · Shop'">Shop</title>
+    <script th:src="@{/js/theme.js}"></script>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
     <link rel="stylesheet" th:href="@{/css/app.css}">
@@ -33,6 +34,7 @@
                     <a class="nav-link" th:classappend="${active == 'users'} ? 'active'" th:href="@{/admin/users}">Users</a>
                 </li>
             </ul>
+            <button type="button" class="theme-toggle me-2" data-theme-toggle aria-label="Switch between light and dark mode" title="Switch theme"><i class="bi bi-circle-half"></i></button>
             <div class="d-flex align-items-center gap-2" sec:authorize="!isAuthenticated()">
                 <a class="btn btn-link nav-signin" th:href="@{/login}">Sign in</a>
                 <a class="btn btn-primary btn-sm" th:href="@{/register}">Create account</a>

@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Authentication", description = "Register, log in, rotate and revoke tokens")
 @RequiredArgsConstructor
 public class AuthApiController {
 
