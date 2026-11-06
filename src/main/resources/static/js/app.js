@@ -6,3 +6,11 @@ document.addEventListener('submit', function (event) {
         event.preventDefault();
     }
 });
+// Light/dark switch in the navigation bar.
+document.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-theme-toggle]');
+    if (!button) { return; }
+    var next = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-bs-theme', next);
+    try { localStorage.setItem('theme', next); } catch (e) { /* storage unavailable */ }
+});

@@ -65,7 +65,7 @@ validates that the entities match it.
 
 1. Foundation: Java 21, Spring Boot 3.5, Flyway, domain model, catalog pages, tests (done)
 2. Security: BCrypt passwords, form login, JWT for the API, roles, storefront (done)
-3. Catalog REST API with OpenAPI docs
+3. Catalog REST API with OpenAPI docs, dark mode (done)
 4. Cart (guest and signed-in), orders, stock movements and coupons
 5. Reviews, wishlist, emails and an admin dashboard
 6. Docker Compose, screenshots, release polish
