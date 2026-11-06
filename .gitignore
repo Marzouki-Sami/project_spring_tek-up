@@ -36,3 +36,6 @@ build/
 *.out
 *.err
 .env
+
+# Development emails written instead of sent
+mail-outbox/

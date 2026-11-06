@@ -28,9 +28,16 @@ public class CheckoutController {
     private final Cart cart;
     private final CartService carts;
     private final OrderService orders;
+    private final com.marzouki.shop.user.UserService users;
+    private final com.marzouki.shop.mail.MailProperties mail;
 
     @GetMapping
-    public String form(@AuthenticationPrincipal AppUserDetails me, Model model) {
+    public String form(@AuthenticationPrincipal AppUserDetails me, Model model,
+                       org.springframework.web.servlet.mvc.support.RedirectAttributes flash) {
+        if (mustVerify(me)) {
+            flash.addFlashAttribute("error", "Please confirm your email address before checking out");
+            return "redirect:/account";
+        }
         CartView view = carts.view(cart);
         if (view.isEmpty()) {
             return "redirect:/cart";
@@ -44,7 +51,12 @@ public class CheckoutController {
 
     @PostMapping
     public String place(@AuthenticationPrincipal AppUserDetails me,
-                        @Valid @ModelAttribute("form") ShippingForm form, BindingResult result, Model model) {
+                        @Valid @ModelAttribute("form") ShippingForm form, BindingResult result, Model model,
+                        org.springframework.web.servlet.mvc.support.RedirectAttributes flash) {
+        if (mustVerify(me)) {
+            flash.addFlashAttribute("error", "Please confirm your email address before checking out");
+            return "redirect:/account";
+        }
         if (!result.hasErrors()) {
             try {
                 Order order = orders.place(me.getId(), form, cart);
@@ -60,5 +72,10 @@ public class CheckoutController {
         }
         model.addAttribute("cart", view);
         return "checkout/checkout";
+    }
+
+    /** With real email delivery on, an unconfirmed address cannot place orders (we could not reach the buyer). */
+    private boolean mustVerify(AppUserDetails me) {
+        return mail.enabled() && !users.get(me.getId()).isEmailVerified();
     }
 }

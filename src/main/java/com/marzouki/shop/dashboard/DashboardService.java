@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class DashboardService {
 
-    public static final int LOW_STOCK_LEVEL = 5;
+    public static final int LOW_STOCK_LEVEL = com.marzouki.shop.order.OrderService.LOW_STOCK_LEVEL;
     private static final int DAYS = 30;
 
     private final OrderRepository orders;
