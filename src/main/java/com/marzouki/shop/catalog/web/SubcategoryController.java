@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/subcategories")
+@RequestMapping("/manage/subcategories")
 @RequiredArgsConstructor
 public class SubcategoryController {
 
@@ -31,41 +31,41 @@ public class SubcategoryController {
 
     @GetMapping("/new")
     public String newForm(Model model) {
-        return show(model, new SubcategoryForm(), "/subcategories", "New subcategory");
+        return show(model, new SubcategoryForm(), "/manage/subcategories", "New subcategory");
     }
 
     @PostMapping
     public String create(@Valid @ModelAttribute("form") SubcategoryForm form, BindingResult result,
                          Model model, RedirectAttributes flash) {
         if (result.hasErrors()) {
-            return show(model, form, "/subcategories", "New subcategory");
+            return show(model, form, "/manage/subcategories", "New subcategory");
         }
         subcategories.create(form);
         flash.addFlashAttribute("success", "Subcategory created");
-        return "redirect:/subcategories";
+        return "redirect:/manage/subcategories";
     }
 
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
-        return show(model, subcategories.formFor(id), "/subcategories/" + id, "Edit subcategory");
+        return show(model, subcategories.formFor(id), "/manage/subcategories/" + id, "Edit subcategory");
     }
 
     @PostMapping("/{id}")
     public String update(@PathVariable Long id, @Valid @ModelAttribute("form") SubcategoryForm form,
                          BindingResult result, Model model, RedirectAttributes flash) {
         if (result.hasErrors()) {
-            return show(model, form, "/subcategories/" + id, "Edit subcategory");
+            return show(model, form, "/manage/subcategories/" + id, "Edit subcategory");
         }
         subcategories.update(id, form);
         flash.addFlashAttribute("success", "Subcategory saved");
-        return "redirect:/subcategories";
+        return "redirect:/manage/subcategories";
     }
 
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes flash) {
         subcategories.delete(id);
         flash.addFlashAttribute("success", "Subcategory deleted");
-        return "redirect:/subcategories";
+        return "redirect:/manage/subcategories";
     }
 
     private String show(Model model, SubcategoryForm form, String action, String heading) {

@@ -62,6 +62,8 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+      - name: Generate a throwaway JWT secret
+        run: echo "JWT_SECRET=$(openssl rand -base64 48 | tr -d '\n')" >> "$GITHUB_ENV"
       - name: Tests against MySQL
         env:
           SPRING_PROFILES_ACTIVE: mysql

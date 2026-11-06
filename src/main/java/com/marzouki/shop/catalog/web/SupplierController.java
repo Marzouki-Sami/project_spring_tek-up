@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/suppliers")
+@RequestMapping("/manage/suppliers")
 @RequiredArgsConstructor
 public class SupplierController {
 
@@ -29,41 +29,41 @@ public class SupplierController {
 
     @GetMapping("/new")
     public String newForm(Model model) {
-        return show(model, new SupplierForm(), "/suppliers", "New supplier");
+        return show(model, new SupplierForm(), "/manage/suppliers", "New supplier");
     }
 
     @PostMapping
     public String create(@Valid @ModelAttribute("form") SupplierForm form, BindingResult result,
                          Model model, RedirectAttributes flash) {
         if (result.hasErrors()) {
-            return show(model, form, "/suppliers", "New supplier");
+            return show(model, form, "/manage/suppliers", "New supplier");
         }
         suppliers.create(form);
         flash.addFlashAttribute("success", "Supplier created");
-        return "redirect:/suppliers";
+        return "redirect:/manage/suppliers";
     }
 
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
-        return show(model, suppliers.formFor(id), "/suppliers/" + id, "Edit supplier");
+        return show(model, suppliers.formFor(id), "/manage/suppliers/" + id, "Edit supplier");
     }
 
     @PostMapping("/{id}")
     public String update(@PathVariable Long id, @Valid @ModelAttribute("form") SupplierForm form,
                          BindingResult result, Model model, RedirectAttributes flash) {
         if (result.hasErrors()) {
-            return show(model, form, "/suppliers/" + id, "Edit supplier");
+            return show(model, form, "/manage/suppliers/" + id, "Edit supplier");
         }
         suppliers.update(id, form);
         flash.addFlashAttribute("success", "Supplier saved");
-        return "redirect:/suppliers";
+        return "redirect:/manage/suppliers";
     }
 
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes flash) {
         suppliers.delete(id);
         flash.addFlashAttribute("success", "Supplier deleted");
-        return "redirect:/suppliers";
+        return "redirect:/manage/suppliers";
     }
 
     private String show(Model model, SupplierForm form, String action, String heading) {

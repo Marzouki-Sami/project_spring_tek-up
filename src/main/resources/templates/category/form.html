@@ -3,7 +3,7 @@
 <head th:replace="~{fragments/layout :: head(${heading})}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: nav('categories')}"></nav>
-<main class="container" style="max-width: 640px">
+<main class="container narrow">
     <h1 class="h3 mb-4" th:text="${heading}"></h1>
     <form th:action="${action}" th:object="${form}" method="post" novalidate>
         <div class="mb-3">
@@ -18,7 +18,7 @@
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-primary" type="submit">Save</button>
-            <a class="btn btn-outline-secondary" href="/categories">Cancel</a>
+            <a class="btn btn-outline-secondary" href="/manage/categories">Cancel</a>
         </div>
     </form>
 </main>

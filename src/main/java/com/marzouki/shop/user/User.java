@@ -42,6 +42,21 @@ public class User {
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified;
 
+    @Column(name = "failed_attempts", nullable = false)
+    private int failedAttempts;
+
+    /** While this moment is in the future, sign-in is refused. */
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    public boolean isLockedAt(Instant now) {
+        return lockedUntil != null && lockedUntil.isAfter(now);
+    }
 }

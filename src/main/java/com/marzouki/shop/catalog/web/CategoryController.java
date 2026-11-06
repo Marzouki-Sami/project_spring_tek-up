@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/categories")
+@RequestMapping("/manage/categories")
 @RequiredArgsConstructor
 public class CategoryController {
 
@@ -30,7 +30,7 @@ public class CategoryController {
     @GetMapping("/new")
     public String newForm(Model model) {
         model.addAttribute("form", new CategoryForm());
-        model.addAttribute("action", "/categories");
+        model.addAttribute("action", "/manage/categories");
         model.addAttribute("heading", "New category");
         return "category/form";
     }
@@ -39,19 +39,19 @@ public class CategoryController {
     public String create(@Valid @ModelAttribute("form") CategoryForm form, BindingResult result,
                          Model model, RedirectAttributes flash) {
         if (result.hasErrors()) {
-            model.addAttribute("action", "/categories");
+            model.addAttribute("action", "/manage/categories");
             model.addAttribute("heading", "New category");
             return "category/form";
         }
         categories.create(form);
         flash.addFlashAttribute("success", "Category created");
-        return "redirect:/categories";
+        return "redirect:/manage/categories";
     }
 
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         model.addAttribute("form", categories.formFor(id));
-        model.addAttribute("action", "/categories/" + id);
+        model.addAttribute("action", "/manage/categories/" + id);
         model.addAttribute("heading", "Edit category");
         return "category/form";
     }
@@ -60,19 +60,19 @@ public class CategoryController {
     public String update(@PathVariable Long id, @Valid @ModelAttribute("form") CategoryForm form,
                          BindingResult result, Model model, RedirectAttributes flash) {
         if (result.hasErrors()) {
-            model.addAttribute("action", "/categories/" + id);
+            model.addAttribute("action", "/manage/categories/" + id);
             model.addAttribute("heading", "Edit category");
             return "category/form";
         }
         categories.update(id, form);
         flash.addFlashAttribute("success", "Category saved");
-        return "redirect:/categories";
+        return "redirect:/manage/categories";
     }
 
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes flash) {
         categories.delete(id);
         flash.addFlashAttribute("success", "Category deleted");
-        return "redirect:/categories";
+        return "redirect:/manage/categories";
     }
 }

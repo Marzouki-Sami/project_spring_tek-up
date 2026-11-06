@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('My account')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('account')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <h1 class="h3 mb-1">My account</h1>
+    <p class="text-secondary mb-4"><span th:text="${email}">email</span> · <span class="badge text-bg-secondary role-badge" th:text="${role}">CUSTOMER</span></p>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <form class="panel" th:action="@{/account/profile}" th:object="${profile}" method="post" novalidate>
+                <h2 class="h5 mb-3">Your details</h2>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label" for="firstName">First name</label>
+                        <input class="form-control" id="firstName" th:field="*{firstName}" th:errorclass="is-invalid">
+                        <div class="invalid-feedback" th:errors="*{firstName}"></div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="lastName">Last name</label>
+                        <input class="form-control" id="lastName" th:field="*{lastName}" th:errorclass="is-invalid">
+                        <div class="invalid-feedback" th:errors="*{lastName}"></div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="phone">Phone <span class="text-secondary">(optional)</span></label>
+                        <input class="form-control" id="phone" th:field="*{phone}" th:errorclass="is-invalid" autocomplete="tel">
+                        <div class="invalid-feedback" th:errors="*{phone}"></div>
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-4" type="submit">Save changes</button>
+            </form>
+        </div>
+        <div class="col-lg-6">
+            <form class="panel" th:action="@{/account/password}" th:object="${password}" method="post" novalidate>
+                <h2 class="h5 mb-3">Change password</h2>
+                <div class="mb-3">
+                    <label class="form-label" for="currentPassword">Current password</label>
+                    <input class="form-control" id="currentPassword" type="password" th:field="*{currentPassword}" th:errorclass="is-invalid" autocomplete="current-password">
+                    <div class="invalid-feedback" th:errors="*{currentPassword}"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="newPassword">New password</label>
+                    <input class="form-control" id="newPassword" type="password" th:field="*{newPassword}" th:errorclass="is-invalid" autocomplete="new-password">
+                    <div class="invalid-feedback" th:errors="*{newPassword}"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="confirmPassword">Repeat new password</label>
+                    <input class="form-control" id="confirmPassword" type="password" th:field="*{confirmPassword}" th:errorclass="is-invalid" autocomplete="new-password">
+                    <div class="invalid-feedback" th:errors="*{confirmPassword}"></div>
+                </div>
+                <button class="btn btn-primary mt-2" type="submit">Change password</button>
+            </form>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

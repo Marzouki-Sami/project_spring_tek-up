@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head(${product.name})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('shop')}"></nav>
+<main class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/products}">Shop</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/products(category=${product.subcategory.category.id})}" th:text="${product.subcategory.category.title}">Category</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${product.name}">Product</li>
+        </ol>
+    </nav>
+    <div class="row g-5">
+        <div class="col-md-5">
+            <div class="detail-art" th:classappend="'art-' + ${product.subcategory.category.id % 6}"><i class="bi bi-bag-heart"></i></div>
+        </div>
+        <div class="col-md-7">
+            <span class="text-secondary text-uppercase small" th:text="${product.subcategory.category.title + ' · ' + product.subcategory.title}">Category</span>
+            <h1 class="h2 mt-1" th:text="${product.name}">Product</h1>
+            <p class="price fs-3 my-3" th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</p>
+            <p th:text="${product.description}" th:if="${product.description != null}">Description</p>
+            <p class="mb-4">
+                <span class="badge text-bg-success" th:if="${product.stock > 5}"><i class="bi bi-check-circle"></i> In stock</span>
+                <span class="badge text-bg-warning" th:if="${product.stock > 0 and product.stock <= 5}">Only <span th:text="${product.stock}">3</span> left</span>
+                <span class="badge text-bg-danger" th:if="${product.stock == 0}">Sold out</span>
+            </p>
+            <p class="text-secondary small">SKU <code th:text="${product.sku}">SKU</code></p>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

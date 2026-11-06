@@ -7,7 +7,7 @@
 <main class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0">Suppliers</h1>
-        <a class="btn btn-primary" href="/suppliers/new">New supplier</a>
+        <a class="btn btn-primary" href="/manage/suppliers/new">New supplier</a>
     </div>
     <p class="empty" th:if="${#lists.isEmpty(suppliers)}">No suppliers yet.</p>
     <div class="table-responsive" th:unless="${#lists.isEmpty(suppliers)}">
@@ -30,9 +30,9 @@
                     <td><span th:text="${item.phone}"></span></td>
                     <td><span class="badge" th:classappend="${item.active} ? text-bg-success : text-bg-secondary" th:text="${item.active} ? 'Active' : 'Inactive'"></span></td>
                     <td class="text-end actions">
-                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/suppliers/{id}/edit(id=${item.id})}">Edit</a>
-                        <form th:action="@{/suppliers/{id}/delete(id=${item.id})}" method="post"
-                              th:attr="onsubmit=|return confirm('Delete this ')|">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/suppliers/{id}/edit(id=${item.id})}">Edit</a>
+                        <form th:action="@{/manage/suppliers/{id}/delete(id=${item.id})}" method="post"
+                              data-confirm="Delete this item? This cannot be undone.">
                             <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                         </form>
                     </td>
