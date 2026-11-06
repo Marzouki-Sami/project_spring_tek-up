@@ -15,6 +15,9 @@ for managers and a REST API with token authentication.
   cancellation while an order is still placed, and a manager workflow
   (placed, processing, shipped, delivered, cancelled). Stock is taken atomically so two buyers can never
   oversell, every change is logged in stock_movements, and cancelling returns the items.
+- **Reviews and wishlist**: verified buyers can rate and review a product (one review each, editable);
+  signed-in users keep a wishlist.
+- **Dashboard** (/manage): revenue, orders by status, best sellers and low-stock alerts.
 - **Coupons** (/manage/coupons): percentage, optional expiry date and usage limit.
 - **Accounts**: sign-up with a strong-password policy, sign-in, profile and password change.
 - **Roles**: `CUSTOMER`, `MANAGER` (manages the catalog) and `ADMIN` (also manages users). Each role
@@ -74,5 +77,5 @@ validates that the entities match it.
 2. Security: BCrypt passwords, form login, JWT for the API, roles, storefront (done)
 3. Catalog REST API with OpenAPI docs, dark mode (done)
 4. Cart (guest and signed-in), orders, stock movements and coupons (done)
-5. Reviews, wishlist, emails and an admin dashboard
+5. Reviews, wishlist and dashboard (done); emails
 6. Docker Compose, screenshots, release polish

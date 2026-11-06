@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('dashboard')}"></nav>
+<main class="container">
+    <h1 class="h3 mb-1">Dashboard</h1>
+    <p class="text-secondary mb-4" th:text="'Sales figures cover the last ' + ${overview.days} + ' days and ignore cancelled orders.'">Period</p>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><div class="panel kpi"><span class="kpi-label">Revenue</span><span class="kpi-value" th:text="${#numbers.formatDecimal(overview.revenue, 1, 'COMMA', 2, 'POINT')} + ' €'">0 €</span></div></div>
+        <div class="col-6 col-lg-3"><div class="panel kpi"><span class="kpi-label">Orders</span><span class="kpi-value" th:text="${overview.orderCount}">0</span></div></div>
+        <div class="col-6 col-lg-3"><div class="panel kpi"><span class="kpi-label">Customers</span><span class="kpi-value" th:text="${overview.customers}">0</span></div></div>
+        <div class="col-6 col-lg-3"><div class="panel kpi"><span class="kpi-label">Active products</span><span class="kpi-value" th:text="${overview.activeProducts}">0</span></div></div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="panel">
+                <h2 class="h6 mb-3">Orders by status</h2>
+                <a class="status-row" th:each="s : ${overview.byStatus}" th:href="@{/manage/orders(status=${s.status})}">
+                    <span class="badge" th:classappend="'text-bg-' + ${s.status.color}" th:text="${s.status.label}">Placed</span>
+                    <strong th:text="${s.count}">0</strong>
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel">
+                <h2 class="h6 mb-3">Best sellers</h2>
+                <p class="text-secondary mb-0" th:if="${#lists.isEmpty(overview.topSellers)}">No sales yet.</p>
+                <div class="status-row" th:each="t : ${overview.topSellers}">
+                    <span th:text="${t.name}">Product</span>
+                    <strong th:text="${t.units} + ' sold'">0</strong>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel">
+                <h2 class="h6 mb-3">Running low</h2>
+                <p class="text-secondary mb-0" th:if="${#lists.isEmpty(overview.lowStock)}">All products are well stocked.</p>
+                <a class="status-row" th:each="p : ${overview.lowStock}" th:href="@{/manage/products/{id}/edit(id=${p.id})}">
+                    <span th:text="${p.name}">Product</span>
+                    <span class="badge" th:classappend="${p.stock == 0} ? 'text-bg-danger' : 'text-bg-warning'" th:text="${p.stock == 0} ? 'Sold out' : ${p.stock} + ' left'">3</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

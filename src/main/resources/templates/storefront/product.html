@@ -31,9 +31,57 @@
                 <input class="form-control qty-input" id="quantity" name="quantity" type="number" min="1" th:max="${product.stock < 20 ? product.stock : 20}" value="1">
                 <button class="btn btn-primary" type="submit"><i class="bi bi-cart-plus"></i> Add to cart</button>
             </form>
+            <div class="mb-3">
+                <form class="d-inline" sec:authorize="isAuthenticated()" th:action="@{/wishlist/toggle}" method="post" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+                    <input type="hidden" name="productId" th:value="${product.id}">
+                    <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi" th:classappend="${wished} ? 'bi-heart-fill text-danger' : 'bi-heart'"></i> <span th:text="${wished} ? 'On your wishlist' : 'Add to wishlist'">Wishlist</span></button>
+                </form>
+                <a class="btn btn-outline-secondary btn-sm" sec:authorize="!isAuthenticated()" th:href="@{/login}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"><i class="bi bi-heart"></i> Sign in to save</a>
+            </div>
             <p class="text-secondary small">SKU <code th:text="${product.sku}">SKU</code></p>
         </div>
     </div>
+    <section class="mt-5" id="reviews">
+        <div th:replace="~{fragments/layout :: flash}"></div>
+        <h2 class="h4 mb-1">Reviews</h2>
+        <p class="text-secondary mb-3" th:if="${average != null}">
+            <span class="stars"><i class="bi" th:each="n : ${#numbers.sequence(1, 5)}" th:classappend="${n <= average + 0.5} ? 'bi-star-fill' : 'bi-star'"></i></span>
+            <span th:text="${#numbers.formatDecimal(average, 1, 1)} + ' out of 5 · ' + ${#lists.size(reviews)} + (${#lists.size(reviews) == 1} ? ' review' : ' reviews')">4.5</span>
+        </p>
+        <p class="text-secondary" th:if="${average == null}">No reviews yet.</p>
+
+        <form class="panel mb-4 review-form" th:if="${canReview}" th:action="@{/reviews}" method="post">
+            <h3 class="h6 mb-3" th:text="${myReview != null} ? 'Update your review' : 'Write a review'">Write a review</h3>
+            <input type="hidden" name="productId" th:value="${product.id}">
+            <div class="mb-3">
+                <label class="form-label" for="rating">Rating</label>
+                <select class="form-select rating-select" id="rating" name="rating" required>
+                    <option th:each="n : ${#numbers.sequence(5, 1, -1)}" th:value="${n}" th:text="${n} + (${n == 1} ? ' star' : ' stars')" th:selected="${myReview != null and myReview.rating == n}"></option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="comment">Your thoughts <span class="text-secondary">(optional)</span></label>
+                <textarea class="form-control" id="comment" name="comment" rows="3" maxlength="1000" th:text="${myReview != null} ? ${myReview.comment}"></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Save review</button>
+        </form>
+
+        <div class="review" th:each="r : ${reviews}">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div>
+                    <span class="stars"><i class="bi" th:each="n : ${#numbers.sequence(1, 5)}" th:classappend="${n <= r.rating} ? 'bi-star-fill' : 'bi-star'"></i></span>
+                    <strong class="ms-2" th:text="${r.user.firstName}">Name</strong>
+                    <span class="badge text-bg-success ms-1"><i class="bi bi-patch-check"></i> Verified buyer</span>
+                    <div class="text-secondary small" th:text="${#temporals.format(r.createdAt, 'd MMM yyyy')}">Date</div>
+                </div>
+                <form th:if="${myReview != null and myReview.id == r.id} or ${#authorization.expression('hasRole(''MANAGER'')')}"
+                      th:action="@{/reviews/{id}/delete(id=${r.id})}" method="post" data-confirm="Remove this review?">
+                    <button class="btn btn-sm btn-link text-danger" type="submit" aria-label="Remove review"><i class="bi bi-trash"></i></button>
+                </form>
+            </div>
+            <p class="mt-2 mb-0" th:if="${r.comment != null}" th:text="${r.comment}">Comment</p>
+        </div>
+    </section>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
