@@ -7,7 +7,7 @@
 <main class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0">Subcategories</h1>
-        <a class="btn btn-primary" href="/subcategories/new">New subcategory</a>
+        <a class="btn btn-primary" href="/manage/subcategories/new">New subcategory</a>
     </div>
     <p class="empty" th:if="${#lists.isEmpty(subcategories)}">No subcategories yet. Create a category first, then add subcategories to it.</p>
     <div class="table-responsive" th:unless="${#lists.isEmpty(subcategories)}">
@@ -26,9 +26,9 @@
                     <td><span th:text="${item.category.title}"></span></td>
                     <td><span th:text="${item.description}"></span></td>
                     <td class="text-end actions">
-                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/subcategories/{id}/edit(id=${item.id})}">Edit</a>
-                        <form th:action="@{/subcategories/{id}/delete(id=${item.id})}" method="post"
-                              th:attr="onsubmit=|return confirm('Delete this ')|">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/subcategories/{id}/edit(id=${item.id})}">Edit</a>
+                        <form th:action="@{/manage/subcategories/{id}/delete(id=${item.id})}" method="post"
+                              data-confirm="Delete this item? This cannot be undone.">
                             <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                         </form>
                     </td>

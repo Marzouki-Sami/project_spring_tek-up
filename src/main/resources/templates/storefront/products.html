@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Shop')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('shop')}"></nav>
+<main class="container">
+    <h1 class="h3 mb-3">Shop</h1>
+    <form class="row g-2 mb-3" method="get" th:action="@{/products}">
+        <div class="col-12 col-md">
+            <input class="form-control" type="search" name="q" th:value="${q}" placeholder="Search products" aria-label="Search products">
+        </div>
+        <div class="col-6 col-md-3">
+            <select class="form-select" name="category" aria-label="Category">
+                <option value="">All categories</option>
+                <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.title}" th:selected="${c.id == selectedCategory}"></option>
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <select class="form-select" name="sort" aria-label="Sort by">
+                <option value="name" th:selected="${sort == 'name'}">Name</option>
+                <option value="price-asc" th:selected="${sort == 'price-asc'}">Price: low to high</option>
+                <option value="price-desc" th:selected="${sort == 'price-desc'}">Price: high to low</option>
+                <option value="newest" th:selected="${sort == 'newest'}">Newest</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-auto"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i> Search</button></div>
+    </form>
+    <p class="text-secondary" th:text="${page.totalElements} + (${page.totalElements == 1} ? ' product' : ' products')">0 products</p>
+    <p class="empty" th:if="${page.empty}">No products match your search.</p>
+    <div class="row g-4">
+        <div class="col-6 col-md-4 col-lg-3" th:each="p : ${page.content}">
+            <div th:replace="~{storefront/card :: card(${p})}"></div>
+        </div>
+    </div>
+    <nav class="mt-4" aria-label="Pages" th:if="${page.totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                <a class="page-link" th:href="@{/products(q=${q},category=${selectedCategory},sort=${sort},page=${page.number - 1})}">Previous</a>
+            </li>
+            <li class="page-item disabled"><span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span></li>
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                <a class="page-link" th:href="@{/products(q=${q},category=${selectedCategory},sort=${sort},page=${page.number + 1})}">Next</a>
+            </li>
+        </ul>
+    </nav>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

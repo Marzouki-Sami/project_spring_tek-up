@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Users')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('users')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <h1 class="h3 mb-3">Users</h1>
+    <div class="table-responsive">
+        <table class="table table-hover bg-white">
+            <thead>
+                <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th class="text-end">Actions</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="u : ${users}">
+                    <td th:text="${u.fullName}">Name</td>
+                    <td th:text="${u.email}">email</td>
+                    <td>
+                        <form th:if="${u.id != meId}" th:action="@{/admin/users/{id}/role(id=${u.id})}" method="post" class="d-flex gap-1">
+                            <select class="form-select form-select-sm role-select" name="role" th:attr="aria-label='Role of ' + ${u.email}">
+                                <option th:each="r : ${roles}" th:value="${r}" th:text="${r}" th:selected="${r == u.role}"></option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">Set</button>
+                        </form>
+                        <span class="badge text-bg-primary" th:if="${u.id == meId}" th:text="${u.role} + ' (you)'">ADMIN</span>
+                    </td>
+                    <td>
+                        <span class="badge text-bg-success" th:if="${u.enabled and !u.isLockedAt(now)}">Active</span>
+                        <span class="badge text-bg-warning" th:if="${u.enabled and u.isLockedAt(now)}">Locked</span>
+                        <span class="badge text-bg-secondary" th:unless="${u.enabled}">Disabled</span>
+                    </td>
+                    <td class="text-end actions">
+                        <form th:if="${u.isLockedAt(now)}" th:action="@{/admin/users/{id}/unlock(id=${u.id})}" method="post">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">Unlock</button>
+                        </form>
+                        <form th:if="${u.id != meId and u.enabled}" th:action="@{/admin/users/{id}/enabled(id=${u.id})}" method="post"
+                              data-confirm="Disable this account? The user will be signed out of the API and cannot sign in.">
+                            <input type="hidden" name="enabled" value="false">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Disable</button>
+                        </form>
+                        <form th:if="${u.id != meId and !u.enabled}" th:action="@{/admin/users/{id}/enabled(id=${u.id})}" method="post">
+                            <input type="hidden" name="enabled" value="true">
+                            <button class="btn btn-sm btn-outline-success" type="submit">Enable</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Access denied')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('')}"></nav>
+<main class="container error-page">
+    <div class="code">403</div>
+    <h1 class="h4 mt-3">Access denied</h1>
+    <p class="text-secondary">You do not have permission to view this page.</p>
+    <a class="btn btn-primary" th:href="@{/}">Back to the shop</a>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

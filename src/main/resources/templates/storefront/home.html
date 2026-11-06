@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Home')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('')}"></nav>
+<main class="container">
+    <div class="alert alert-success" role="status" th:if="${param.welcome}">Welcome! Your account is ready.</div>
+    <div class="alert alert-info" role="status" th:if="${param.signedOut}">You have been signed out.</div>
+    <section class="hero">
+        <h1>Good things, simply delivered.</h1>
+        <p class="lead mb-4">Browse the catalogue without an account. Create one only when you are ready to check out.</p>
+        <a class="btn btn-light btn-lg" th:href="@{/products}">Browse the shop <i class="bi bi-arrow-right"></i></a>
+    </section>
+    <section class="mb-4" th:unless="${#lists.isEmpty(categories)}">
+        <h2 class="section-title">Shop by category</h2>
+        <a class="chip" th:each="c : ${categories}" th:href="@{/products(category=${c.id})}" th:text="${c.title}">Category</a>
+    </section>
+    <section>
+        <h2 class="section-title">New arrivals</h2>
+        <p class="empty" th:if="${#lists.isEmpty(latest)}">The shelves are being stocked. Come back soon.</p>
+        <div class="row g-4">
+            <div class="col-6 col-md-4 col-lg-3" th:each="p : ${latest}">
+                <div th:replace="~{storefront/card :: card(${p})}"></div>
+            </div>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
