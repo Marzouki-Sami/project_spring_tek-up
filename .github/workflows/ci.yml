@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
 
 permissions:
@@ -23,5 +23,49 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - name: Build and test
+      - name: Build, test and measure coverage
         run: ./mvnw -B verify
+      - name: Coverage summary
+        if: always()
+        run: |
+          if [ -f target/site/jacoco/jacoco.csv ]; then
+            awk -F, 'NR>1 { missed+=$4; covered+=$5 } END { if (missed+covered>0) printf "Line coverage: %.1f%%\n", 100*covered/(missed+covered) }' target/site/jacoco/jacoco.csv | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports
+          path: |
+            target/surefire-reports
+            target/site/jacoco
+          retention-days: 7
+
+  mysql-integration:
+    # Runs the whole application against a real MySQL, so a migration that only
+    # works on H2 can never reach production.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: shop
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Tests against MySQL
+        env:
+          SPRING_PROFILES_ACTIVE: mysql
+          DB_URL: jdbc:mysql://127.0.0.1:3306/shop
+          DB_USERNAME: root
+          DB_PASSWORD: ""
+        run: ./mvnw -B test
