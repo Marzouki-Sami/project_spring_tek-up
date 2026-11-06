@@ -60,6 +60,17 @@ printed once to the console.
 
 To create your own first administrator, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` before starting.
 
+Everything in containers (app, MySQL and a mail inbox), with sample data:
+
+```bash
+export JWT_SECRET=$(openssl rand -base64 48)
+docker compose up --build
+```
+
+Open http://localhost:8081 for the shop and http://localhost:8025 for the mail inbox where
+confirmation and order emails arrive. The sample accounts have random passwords:
+`docker compose logs app | grep "Demo account"`.
+
 With MySQL:
 
 ```bash
