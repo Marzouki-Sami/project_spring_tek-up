@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body style="margin:0;padding:24px;background:#f5f6fb;font-family:Arial,Helvetica,sans-serif;color:#24243a;">
+<div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e7e8f3;border-radius:12px;padding:28px;">
+    <p style="margin:0 0 20px;font-size:20px;font-weight:bold;color:#4f46e5;">Shop</p>
+    <p>Hi <span th:text="${name}">there</span>,</p>
+    <p>Good news: your order <strong th:text="'#' + ${order.id}">#1</strong> has shipped to <span th:text="${order.city}">city</span>.</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+        <tr th:each="i : ${order.items}"><td style="padding:6px 0;border-bottom:1px solid #eee;" th:text="${i.quantity} + ' × ' + ${i.name}">1 × Item</td>
+            <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right;" th:text="${#numbers.formatDecimal(i.lineTotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0 €</td></tr>
+        <tr th:if="${order.discount.signum() > 0}"><td style="padding:6px 0;">Discount</td><td style="padding:6px 0;text-align:right;" th:text="'- ' + ${#numbers.formatDecimal(order.discount, 1, 'COMMA', 2, 'POINT')} + ' €'">0 €</td></tr>
+        <tr><td style="padding:8px 0;font-weight:bold;">Total</td><td style="padding:8px 0;text-align:right;font-weight:bold;" th:text="${#numbers.formatDecimal(order.total, 1, 'COMMA', 2, 'POINT')} + ' €'">0 €</td></tr>
+    </table>
+    <p style="margin:24px 0;"><a th:href="${link}" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;">View your order</a></p>
+    <p style="margin:28px 0 0;font-size:12px;color:#8a8aa5;">You received this email because of activity on your Shop account.</p>
+</div>
+</body>
+</html>

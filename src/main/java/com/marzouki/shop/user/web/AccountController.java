@@ -33,6 +33,7 @@ public class AccountController {
     public String show(@AuthenticationPrincipal AppUserDetails me, Model model) {
         model.addAttribute("profile", users.profileFor(me.getId()));
         model.addAttribute("password", new PasswordChangeForm());
+        model.addAttribute("verified", users.get(me.getId()).isEmailVerified());
         model.addAttribute("email", me.getEmail());
         model.addAttribute("role", me.getRole());
         return "account/account";
@@ -45,6 +46,7 @@ public class AccountController {
                               RedirectAttributes flash) {
         if (result.hasErrors()) {
             model.addAttribute("password", new PasswordChangeForm());
+            model.addAttribute("verified", users.get(me.getId()).isEmailVerified());
             model.addAttribute("email", me.getEmail());
             model.addAttribute("role", me.getRole());
             return "account/account";
@@ -72,6 +74,7 @@ public class AccountController {
             }
         }
         model.addAttribute("profile", users.profileFor(me.getId()));
+        model.addAttribute("verified", users.get(me.getId()).isEmailVerified());
         model.addAttribute("email", me.getEmail());
         model.addAttribute("role", me.getRole());
         return "account/account";

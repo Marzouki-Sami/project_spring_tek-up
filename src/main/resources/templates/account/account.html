@@ -7,6 +7,10 @@
 <main class="container">
     <h1 class="h3 mb-1">My account</h1>
     <p class="text-secondary mb-4"><span th:text="${email}">email</span> · <span class="badge text-bg-secondary role-badge" th:text="${role}">CUSTOMER</span></p>
+    <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status" th:unless="${verified}">
+        <span><i class="bi bi-envelope-exclamation"></i> Please confirm your email address. We sent you a link when you signed up.</span>
+        <form th:action="@{/account/verify/resend}" method="post" class="m-0"><button class="btn btn-sm btn-warning" type="submit">Send it again</button></form>
+    </div>
     <div class="row g-4">
         <div class="col-lg-6">
             <form class="panel" th:action="@{/account/profile}" th:object="${profile}" method="post" novalidate>

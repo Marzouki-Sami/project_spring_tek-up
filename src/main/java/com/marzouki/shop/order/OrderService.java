@@ -19,12 +19,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class OrderService {
 
+    /** At or below this many units a product triggers a low-stock alert. */
+    public static final int LOW_STOCK_LEVEL = 5;
+
     private final OrderRepository orders;
     private final ProductRepository products;
     private final CouponRepository coupons;
     private final StockMovementRepository movements;
     private final UserRepository users;
     private final CartService carts;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     /**
      * Turns the basket into an order. Stock is taken line by line with atomic updates; if any line
@@ -61,6 +65,10 @@ public class OrderService {
             if (products.takeStock(line.product().getId(), line.quantity()) == 0) {
                 throw new ConflictException("Sorry, " + line.product().getName() + " just went out of stock");
             }
+            int before = line.product().getStock();
+            if (before > LOW_STOCK_LEVEL && before - line.quantity() <= LOW_STOCK_LEVEL) {
+                events.publishEvent(new OrderEvents.LowStock(line.product().getId()));
+            }
             OrderItem item = new OrderItem();
             item.setProduct(line.product());
             item.setSku(line.product().getSku());
@@ -74,6 +82,7 @@ public class OrderService {
             movements.save(new StockMovement(item.getProduct().getId(), -item.getQuantity(),
                     StockMovement.Reason.ORDER, order.getId()));
         }
+        events.publishEvent(new OrderEvents.OrderPlaced(order.getId()));
         return order;
     }
 
@@ -131,6 +140,9 @@ public class OrderService {
             }
         }
         order.setStatus(target);
+        if (target == OrderStatus.SHIPPED) {
+            events.publishEvent(new OrderEvents.OrderShipped(order.getId()));
+        }
         return order;
     }
 

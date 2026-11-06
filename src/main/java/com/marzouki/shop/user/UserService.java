@@ -19,6 +19,8 @@ public class UserService {
     private final UserRepository users;
     private final RefreshTokenRepository refreshTokens;
     private final PasswordEncoder encoder;
+    private final EmailTokenService emailTokens;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     public User get(Long id) {
         return users.findById(id).orElseThrow(() -> new NotFoundException("User", id));
@@ -36,7 +38,11 @@ public class UserService {
     /** Creates a customer account. Public sign-up can never create a more privileged role. */
     @Transactional
     public User register(RegistrationForm form) {
-        return create(form.getFirstName(), form.getLastName(), form.getEmail(), form.getPassword(), Role.CUSTOMER);
+        User user = create(form.getFirstName(), form.getLastName(), form.getEmail(), form.getPassword(), Role.CUSTOMER);
+        user.setEmailVerified(false);
+        events.publishEvent(new UserEvents.VerificationRequested(user.getId(),
+                emailTokens.issue(user, EmailToken.Type.VERIFY)));
+        return user;
     }
 
     /** Creates an account with any role. Only for trusted callers: setup code and tests. */
@@ -52,6 +58,7 @@ public class UserService {
         user.setEmail(normalized);
         user.setPasswordHash(encoder.encode(password));
         user.setRole(role);
+        user.setEmailVerified(true);
         return users.save(user);
     }
 
@@ -113,5 +120,40 @@ public class UserService {
         user.setFailedAttempts(0);
         user.setLockedUntil(null);
         return user;
+    }
+
+    @Transactional
+    public void resendVerification(Long id) {
+        User user = get(id);
+        if (!user.isEmailVerified()) {
+            events.publishEvent(new UserEvents.VerificationRequested(user.getId(),
+                    emailTokens.issue(user, EmailToken.Type.VERIFY)));
+        }
+    }
+
+    @Transactional
+    public User verifyEmail(String token) {
+        User user = emailTokens.consume(token, EmailToken.Type.VERIFY);
+        user.setEmailVerified(true);
+        return user;
+    }
+
+    /** Silent when the address is unknown, so the form cannot be used to discover who has an account. */
+    @Transactional
+    public void requestPasswordReset(String email) {
+        users.findByEmailIgnoreCase(email.trim()).filter(User::isEnabled).ifPresent(user ->
+                events.publishEvent(new UserEvents.PasswordResetRequested(user.getId(),
+                        emailTokens.issue(user, EmailToken.Type.RESET))));
+    }
+
+    /** Sets a new password from a reset link. Receiving the email also proves the address, and every API session ends. */
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        User user = emailTokens.consume(token, EmailToken.Type.RESET);
+        user.setPasswordHash(encoder.encode(newPassword));
+        user.setEmailVerified(true);
+        user.setFailedAttempts(0);
+        user.setLockedUntil(null);
+        refreshTokens.revokeAllForUser(user.getId());
     }
 }

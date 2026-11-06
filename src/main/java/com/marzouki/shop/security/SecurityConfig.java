@@ -57,7 +57,7 @@ public class SecurityConfig {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private static final String[] PUBLIC_PAGES = {
-        "/", "/products", "/products/**", "/cart", "/cart/**", "/login", "/register", "/error", "/error/**",
+        "/", "/products", "/products/**", "/cart", "/cart/**", "/login", "/register", "/verify-email", "/forgot-password", "/reset-password", "/error", "/error/**",
         "/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico", "/actuator/health", "/actuator/health/**"
     };
 
