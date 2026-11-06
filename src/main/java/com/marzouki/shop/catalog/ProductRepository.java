@@ -46,6 +46,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths = {"subcategory", "subcategory.category"})
     List<Product> findByIdIn(java.util.Collection<Long> ids);
 
+    List<Product> findTop10ByActiveTrueAndStockLessThanEqualOrderByStockAscNameAsc(int stock);
+
+    long countByActiveTrue();
+
     boolean existsBySkuIgnoreCase(String sku);
 
     boolean existsBySkuIgnoreCaseAndIdNot(String sku, Long id);

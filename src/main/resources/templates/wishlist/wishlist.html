@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Wishlist')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('account')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <h1 class="h3 mb-4">My wishlist</h1>
+    <div class="empty" th:if="${#lists.isEmpty(items)}">
+        <p class="mb-3">Nothing saved yet. Tap the heart on a product to keep it for later.</p>
+        <a class="btn btn-primary" th:href="@{/products}">Browse the shop</a>
+    </div>
+    <div class="row g-4">
+        <div class="col-6 col-md-4 col-lg-3" th:each="item : ${items}">
+            <div th:replace="~{storefront/card :: card(${item.product})}"></div>
+            <form class="mt-2" th:action="@{/wishlist/toggle}" method="post">
+                <input type="hidden" name="productId" th:value="${item.product.id}">
+                <input type="hidden" name="from" value="wishlist">
+                <button class="btn btn-sm btn-outline-secondary w-100" type="submit"><i class="bi bi-heart-fill text-danger"></i> Remove</button>
+            </form>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -40,6 +40,8 @@ public class DemoDataLoader implements ApplicationRunner {
     private final SupplierRepository suppliers;
     private final ProductRepository products;
     private final com.marzouki.shop.order.OrderService orders;
+    private final com.marzouki.shop.cart.CartService carts;
+    private final com.marzouki.shop.engagement.EngagementService engagement;
 
     @Override
     @Transactional
@@ -77,7 +79,57 @@ public class DemoDataLoader implements ApplicationRunner {
         product("SHO-001", "Trail Runner Sneakers", "Grippy, breathable sneakers for city and trail.", "119.00", 27, shoes, atelier);
         product("SHO-002", "Classic Leather Boots", "Handmade boots in full-grain leather.", "199.00", 4, shoes, atelier);
         orders.createCoupon("WELCOME10", 10, null, null);
+        seedActivity();
         log.info("Demo data created. Sign in with admin@demo.shop, manager@demo.shop or customer@demo.shop using the passwords printed to the console above. Coupon WELCOME10 gives 10% off.");
+    }
+
+    /** A few customers with orders and reviews, so the dashboard and product pages are not empty. */
+    private void seedActivity() {
+        var cleo = userRepository.findByEmailIgnoreCase("customer@demo.shop").orElseThrow();
+        var noor = users.create("Noor", "Haddad", "noor@demo.shop", randomPassword(), Role.CUSTOMER);
+        var lena = users.create("Lena", "Fischer", "lena@demo.shop", randomPassword(), Role.CUSTOMER);
+
+        place(cleo, "AUD-001", 1, com.marzouki.shop.order.OrderStatus.DELIVERED);
+        place(cleo, "LGT-001", 2, com.marzouki.shop.order.OrderStatus.SHIPPED);
+        place(noor, "AUD-001", 1, com.marzouki.shop.order.OrderStatus.DELIVERED);
+        place(noor, "BAG-001", 1, com.marzouki.shop.order.OrderStatus.PROCESSING);
+        place(lena, "LAP-001", 1, com.marzouki.shop.order.OrderStatus.PLACED);
+        place(lena, "AUD-001", 1, com.marzouki.shop.order.OrderStatus.DELIVERED);
+
+        review(cleo, "AUD-001", 5, "Great sound and the noise cancelling really works. Battery lasts for days.");
+        review(noor, "AUD-001", 4, "Comfortable for long calls. The case feels a little plasticky.");
+        review(lena, "AUD-001", 5, null);
+        review(cleo, "LGT-001", 5, "Warm light, easy to dim.");
+    }
+
+    private void place(com.marzouki.shop.user.User buyer, String sku, int quantity,
+                       com.marzouki.shop.order.OrderStatus target) {
+        var cart = new com.marzouki.shop.cart.Cart();
+        carts.add(cart, products.findAll().stream().filter(p -> p.getSku().equals(sku)).findFirst().orElseThrow().getId(),
+                quantity);
+        var address = new com.marzouki.shop.order.dto.ShippingForm();
+        address.setFullName(buyer.getFullName());
+        address.setAddress("12 Example Street");
+        address.setCity("Lyon");
+        address.setPostalCode("69001");
+        address.setCountry("France");
+        var order = orders.place(buyer.getId(), address, cart);
+        var path = java.util.List.of(com.marzouki.shop.order.OrderStatus.PROCESSING,
+                com.marzouki.shop.order.OrderStatus.SHIPPED, com.marzouki.shop.order.OrderStatus.DELIVERED);
+        for (var step : path) {
+            if (order.getStatus() == target) {
+                break;
+            }
+            orders.changeStatus(order.getId(), step);
+            order.setStatus(step);
+        }
+    }
+
+    private void review(com.marzouki.shop.user.User author, String sku, int rating, String comment) {
+        var form = new com.marzouki.shop.engagement.dto.ReviewForm();
+        form.setRating(rating);
+        form.setComment(comment);
+        engagement.submit(author.getId(), products.findAll().stream().filter(p -> p.getSku().equals(sku)).findFirst().orElseThrow().getId(), form);
     }
 
     private void createAccount(String first, String last, String email, Role role) {

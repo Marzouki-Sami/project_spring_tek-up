@@ -3,7 +3,11 @@ package com.marzouki.shop.catalog.web;
 import com.marzouki.shop.catalog.CategoryRepository;
 import com.marzouki.shop.catalog.ProductRepository;
 import com.marzouki.shop.common.NotFoundException;
+import com.marzouki.shop.engagement.EngagementService;
+import com.marzouki.shop.engagement.dto.ReviewForm;
+import com.marzouki.shop.security.AppUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,6 +27,7 @@ public class StorefrontController {
 
     private final ProductRepository products;
     private final CategoryRepository categories;
+    private final EngagementService engagement;
 
     @GetMapping("/")
     @Transactional(readOnly = true)
@@ -57,9 +62,17 @@ public class StorefrontController {
 
     @GetMapping("/products/{id}")
     @Transactional(readOnly = true)
-    public String detail(@PathVariable Long id, Model model) {
+    public String detail(@PathVariable Long id, @AuthenticationPrincipal AppUserDetails me, Model model) {
         model.addAttribute("product", products.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new NotFoundException("Product", id)));
+        model.addAttribute("reviews", engagement.reviewsFor(id));
+        model.addAttribute("average", engagement.averageRating(id));
+        model.addAttribute("reviewForm", new ReviewForm());
+        if (me != null) {
+            model.addAttribute("wished", engagement.isWished(me.getId(), id));
+            model.addAttribute("canReview", engagement.hasBought(me.getId(), id));
+            model.addAttribute("myReview", engagement.reviewBy(me.getId(), id));
+        }
         return "storefront/product";
     }
 }
