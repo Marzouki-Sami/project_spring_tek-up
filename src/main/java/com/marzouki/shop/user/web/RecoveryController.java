@@ -55,7 +55,7 @@ public class RecoveryController {
             return "auth/forgot-password";
         }
         users.requestPasswordReset(form.getEmail());
-        flash.addFlashAttribute("success",
+        flash.addFlashAttribute("info",
                 "If an account exists for that address, we sent a link to reset the password.");
         return "redirect:/login";
     }

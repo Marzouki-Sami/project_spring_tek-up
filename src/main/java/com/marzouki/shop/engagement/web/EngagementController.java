@@ -52,7 +52,7 @@ public class EngagementController {
     public String toggle(@AuthenticationPrincipal AppUserDetails me, @RequestParam Long productId,
                          @RequestParam(defaultValue = "product") String from, RedirectAttributes flash) {
         boolean added = engagement.toggleWish(me.getId(), productId);
-        flash.addFlashAttribute("success", added ? "Saved to your wishlist" : "Removed from your wishlist");
+        flash.addFlashAttribute(added ? "success" : "info", added ? "Saved to your wishlist" : "Removed from your wishlist");
         return "wishlist".equals(from) ? "redirect:/account/wishlist" : "redirect:/products/" + productId;
     }
 

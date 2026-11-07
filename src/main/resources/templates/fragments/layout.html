@@ -66,10 +66,8 @@
         </div>
     </div>
 </nav>
-<div th:fragment="flash" class="container flash">
-    <div th:if="${success}" class="alert alert-success" role="status" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
-</div>
+<!-- Kept so pages can still include it; messages now appear as toasts, rendered once by the scripts fragment. -->
+<th:block th:fragment="flash"></th:block>
 <footer th:fragment="footer" class="site-footer">
     <div class="container d-flex flex-wrap justify-content-between gap-2">
         <span>© Shop. A demo store built with Spring Boot.</span>
@@ -77,8 +75,25 @@
     </div>
 </footer>
 <th:block th:fragment="scripts">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-area" aria-live="polite" aria-atomic="false">
+        <th:block th:if="${success}"><div th:replace="~{fragments/layout :: toast('success', ${success}, 'bi-check-circle-fill', 4000)}"></div></th:block>
+        <th:block th:if="${info}"><div th:replace="~{fragments/layout :: toast('info', ${info}, 'bi-info-circle-fill', 5000)}"></div></th:block>
+        <th:block th:if="${warning}"><div th:replace="~{fragments/layout :: toast('warning', ${warning}, 'bi-exclamation-triangle-fill', 7000)}"></div></th:block>
+        <th:block th:if="${error}"><div th:replace="~{fragments/layout :: toast('error', ${error}, 'bi-x-octagon-fill', 9000)}"></div></th:block>
+        <th:block th:if="${param.welcome}"><div th:replace="~{fragments/layout :: toast('success', 'Welcome! Your account is ready.', 'bi-check-circle-fill', 4000)}"></div></th:block>
+        <th:block th:if="${param.signedOut}"><div th:replace="~{fragments/layout :: toast('info', 'You have been signed out.', 'bi-info-circle-fill', 5000)}"></div></th:block>
+        <th:block th:if="${param.placed}"><div th:replace="~{fragments/layout :: toast('success', 'Thank you! Your order was placed.', 'bi-bag-check-fill', 6000)}"></div></th:block>
+    </div>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <script th:src="@{/js/app.js}"></script>
 </th:block>
+<div th:fragment="toast(kind, message, icon, delay)" class="toast app-toast" th:classappend="'app-toast-' + ${kind}"
+     th:attr="role=${kind == 'error' or kind == 'warning'} ? 'alert' : 'status',data-bs-delay=${delay}">
+    <div class="toast-body d-flex align-items-start gap-2">
+        <i class="bi app-toast-icon" th:classappend="${icon}"></i>
+        <span class="flex-grow-1" th:text="${message}">Message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+</div>
 </body>
 </html>

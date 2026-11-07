@@ -61,8 +61,12 @@ public class VariantService {
      * @param chosen option type id mapped to the ids of the values to offer
      * @return how many variants were created
      */
+    /** How many variants a generate request created and how many of the requested combinations already existed. */
+    public record Generated(int created, int alreadyExisted) {
+    }
+
     @Transactional
-    public int generate(Long productId, Map<Long, Set<Long>> chosen) {
+    public Generated generate(Long productId, Map<Long, Set<Long>> chosen) {
         Product product = productWithVariants(productId);
         if (!product.isOptioned()) {
             throw new ConflictException("This product has no type, so it has no options to combine");
@@ -85,16 +89,18 @@ public class VariantService {
                 .map(v -> v.getOptionValues().stream().map(OptionValue::getId).collect(Collectors.toSet()))
                 .collect(Collectors.toSet());
         int created = 0;
+        int skipped = 0;
         for (List<OptionValue> combo : combinations(lists)) {
             Set<Long> key = combo.stream().map(OptionValue::getId).collect(Collectors.toSet());
             if (existing.contains(key)) {
+                skipped++;
                 continue;
             }
             ProductVariant variant = product.addVariant(freeSku(product.getSku(), combo), 0);
             variant.getOptionValues().addAll(combo);
             created++;
         }
-        return created;
+        return new Generated(created, skipped);
     }
 
     @Transactional

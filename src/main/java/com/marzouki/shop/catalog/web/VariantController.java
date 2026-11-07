@@ -42,7 +42,7 @@ public class VariantController {
     }
 
     @PostMapping("/manage/products/{productId}/variants/generate")
-    public String generate(@PathVariable Long productId, @RequestParam Map<String, String> params,
+    public String generate(@PathVariable Long productId,
                            @RequestParam(name = "values", required = false) java.util.List<String> values,
                            RedirectAttributes flash) {
         Map<Long, Set<Long>> chosen = new HashMap<>();
@@ -55,9 +55,17 @@ public class VariantController {
             }
         }
         try {
-            int created = variants.generate(productId, chosen);
-            flash.addFlashAttribute("success", created == 0 ? "Every combination already exists"
-                    : created + (created == 1 ? " variant created" : " variants created"));
+            VariantService.Generated result = variants.generate(productId, chosen);
+            if (result.created() == 0) {
+                flash.addFlashAttribute("warning", result.alreadyExisted() == 1
+                        ? "That variant already exists, so nothing was created"
+                        : "All " + result.alreadyExisted() + " of those variants already exist, so nothing was created");
+            } else if (result.alreadyExisted() > 0) {
+                flash.addFlashAttribute("success", result.created() + (result.created() == 1 ? " variant created" : " variants created")
+                        + ". " + result.alreadyExisted() + " already existed and were left as they are.");
+            } else {
+                flash.addFlashAttribute("success", result.created() + (result.created() == 1 ? " variant created" : " variants created"));
+            }
         } catch (ConflictException e) {
             flash.addFlashAttribute("error", e.getMessage());
         }
@@ -102,7 +110,14 @@ public class VariantController {
         if (!result.hasErrors()) {
             try {
                 stock.adjust(variantId, form.getDelta(), form.getReason(), form.getNote());
-                flash.addFlashAttribute("success", "Stock updated");
+                int now = variants.getForStock(variantId).getStock();
+                if (now == 0) {
+                    flash.addFlashAttribute("warning", "Stock updated. This item is now sold out.");
+                } else if (now <= com.marzouki.shop.order.OrderService.LOW_STOCK_LEVEL) {
+                    flash.addFlashAttribute("warning", "Stock updated. Only " + now + " left.");
+                } else {
+                    flash.addFlashAttribute("success", "Stock updated. " + now + " in stock.");
+                }
                 return "redirect:/manage/variants/" + variantId + "/stock";
             } catch (ConflictException e) {
                 result.rejectValue("delta", "invalid", e.getMessage());

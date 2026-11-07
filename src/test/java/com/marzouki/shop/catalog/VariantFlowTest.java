@@ -156,8 +156,10 @@ class VariantFlowTest {
 
     @Test
     void generatingCreatesEveryCombinationOnceAndOnlyMissingOnesLater() {
-        assertThat(variantService.generate(tee.getId(), allValues())).isEqualTo(6);
-        assertThat(variantService.generate(tee.getId(), allValues())).isZero();
+        assertThat(variantService.generate(tee.getId(), allValues()).created()).isEqualTo(6);
+        VariantService.Generated again = variantService.generate(tee.getId(), allValues());
+        assertThat(again.created()).isZero();
+        assertThat(again.alreadyExisted()).isEqualTo(6);
 
         Product loaded = variantService.productWithVariants(tee.getId());
         assertThat(loaded.getVariants()).extracting(ProductVariant::getSku)
@@ -165,7 +167,31 @@ class VariantFlowTest {
         assertThat(loaded.getVariants().get(0).getLabel()).isEqualTo("Size: S, Color: Black");
 
         optionService.addValue(size.getId(), value("XL", null));
-        assertThat(variantService.generate(tee.getId(), allValues())).isEqualTo(2);
+        assertThat(variantService.generate(tee.getId(), allValues()).created()).isEqualTo(2);
+    }
+
+    @Test
+    void generatingTwiceSendsAWarningToastTheSecondTime() throws Exception {
+        var asManager = user(new AppUserDetails(manager));
+        List<String> picks = new java.util.ArrayList<>();
+        optionService.findAll().forEach(t -> t.getValues().forEach(v -> picks.add(t.getId() + ":" + v.getId())));
+        String url = "/manage/products/" + tee.getId() + "/variants/generate";
+
+        mvc.perform(post(url).with(asManager).with(csrf()).param("values", picks.toArray(String[]::new)))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash().attributeExists("success"));
+        mvc.perform(post(url).with(asManager).with(csrf()).param("values", picks.toArray(String[]::new)))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash().attribute("warning",
+                        containsString("already exist")));
+    }
+
+    @Test
+    void messagesAreRenderedAsToastsOfTheRightKind() throws Exception {
+        for (String kind : List.of("success", "info", "warning", "error")) {
+            mvc.perform(get("/cart").flashAttr(kind, "A " + kind + " message"))
+                    .andExpect(content().string(containsString("app-toast-" + kind)))
+                    .andExpect(content().string(containsString("A " + kind + " message")));
+        }
+        mvc.perform(get("/").param("welcome", "")).andExpect(content().string(containsString("Your account is ready")));
     }
 
     @Test

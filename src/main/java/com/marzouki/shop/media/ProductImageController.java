@@ -43,7 +43,8 @@ public class ProductImageController {
                 flash.addFlashAttribute("success", added == 1 ? "Image added" : added + " images added");
             }
         } catch (ConflictException e) {
-            flash.addFlashAttribute("error", (added > 0 ? added + " added, then: " : "") + e.getMessage());
+            flash.addFlashAttribute(added > 0 ? "warning" : "error",
+                    (added > 0 ? added + " added, but the next one was refused: " : "") + e.getMessage());
         }
         return back(productId);
     }
