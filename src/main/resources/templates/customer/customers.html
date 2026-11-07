@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Customers')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('customers')}"></nav>
+<main class="container">
+    <h1 class="h3 mb-1">Customers</h1>
+    <p class="text-secondary mb-4">People with a customer account. Cancelled orders are not counted.</p>
+    <section class="panel p-0">
+        <form class="panel-toolbar" method="get" th:action="@{/manage/customers}">
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-md">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input class="form-control" type="search" name="q" th:value="${q}" maxlength="80" placeholder="Search by name or email" aria-label="Search customers">
+                    </div>
+                </div>
+                <div class="col-6 col-md-auto">
+                    <select class="form-select form-select-sm" name="sort" data-autosubmit aria-label="Sort by">
+                        <option value="name" th:selected="${sort == 'name'}">Name</option>
+                        <option value="newest" th:selected="${sort == 'newest'}">Newest first</option>
+                        <option value="spent" th:selected="${sort == 'spent'}">Most spent</option>
+                        <option value="orders" th:selected="${sort == 'orders'}">Most orders</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-auto">
+                    <select class="form-select form-select-sm" name="size" data-autosubmit aria-label="Customers per page">
+                        <option th:each="n : ${sizes}" th:value="${n}" th:selected="${n == size}" th:text="${n} + ' per page'">25 per page</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-auto"><button class="btn btn-sm btn-outline-secondary w-100" type="submit">Search</button></div>
+            </div>
+        </form>
+        <div class="table-scroll">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Customer</th><th>Email</th><th>Joined</th><th class="num">Orders</th><th class="num">Spent</th><th>Last order</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr th:if="${rows.empty}"><td colspan="7" class="empty">No customers match.</td></tr>
+                    <tr th:each="c : ${rows.content}">
+                        <td><a th:href="@{/manage/customers/{id}(id=${c.id})}" th:text="${c.fullName}">Name</a></td>
+                        <td th:text="${c.email}">email</td>
+                        <td class="text-nowrap" th:text="${#temporals.format(c.joined, 'yyyy-MM-dd')}">2026-01-01</td>
+                        <td class="num" th:text="${c.orders}">0</td>
+                        <td class="num" th:text="${#numbers.formatDecimal(c.spent, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
+                        <td class="text-nowrap" th:text="${c.lastOrder != null} ? ${#temporals.format(c.lastOrder, 'yyyy-MM-dd')} : '-'">-</td>
+                        <td><span class="badge" th:classappend="${c.enabled} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${c.enabled} ? 'Active' : 'Disabled'">Active</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="panel-footer d-flex flex-wrap justify-content-between align-items-center gap-2" th:if="${rows.totalElements > 0}">
+            <span class="small text-secondary" th:text="'Showing ' + (${rows.number} * ${rows.size} + 1) + '-' + (${rows.number} * ${rows.size} + ${rows.numberOfElements}) + ' of ' + ${rows.totalElements}">Showing 1-25 of 60</span>
+            <nav aria-label="Pages" th:if="${rows.totalPages > 1}">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${rows.first} ? 'disabled'"><a class="page-link" th:href="@{/manage/customers(q=${q},sort=${sort},size=${size},page=${rows.number - 1})}">Previous</a></li>
+                    <li class="page-item disabled"><span class="page-link" th:text="${rows.number + 1} + ' / ' + ${rows.totalPages}">1 / 3</span></li>
+                    <li class="page-item" th:classappend="${rows.last} ? 'disabled'"><a class="page-link" th:href="@{/manage/customers(q=${q},sort=${sort},size=${size},page=${rows.number + 1})}">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
+</body>
+</html>

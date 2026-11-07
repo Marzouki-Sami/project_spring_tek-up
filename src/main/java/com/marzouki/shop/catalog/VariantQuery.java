@@ -65,10 +65,6 @@ public class VariantQuery {
 
     /** The search text as a SQL LIKE pattern with wildcards escaped, or an empty string for no search. */
     String likePattern() {
-        String text = getQ().toLowerCase(Locale.ROOT);
-        if (text.isEmpty()) {
-            return "";
-        }
-        return "%" + text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+        return com.marzouki.shop.common.Like.contains(getQ());
     }
 }

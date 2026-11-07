@@ -33,6 +33,8 @@ into a tested, containerised application.
   cancellation while an order is still placed, and a manager workflow (placed, processing, shipped,
   delivered, cancelled). Stock is taken atomically so two buyers can never oversell, every change is
   logged in `stock_movements`, and cancelling returns the items.
+- **Customers** (/manage/customers): searchable, sortable, paged list of customers with their order
+  count and spend (cancelled orders excluded) and a detail page with their order history.
 - **Reviews and wishlist**: verified buyers can rate and review a product (one review each, editable);
   signed-in users keep a wishlist.
 - **Coupons** (`/manage/coupons`): percentage discount with an optional expiry date and usage limit.
@@ -60,6 +62,14 @@ into a tested, containerised application.
   token signs the account out everywhere.
 - Order status changes and coupon or stock updates are conditional database updates, so concurrent
   requests cannot restock or redeem twice.
+- **Two-factor authentication** with any authenticator app (TOTP, RFC 6238). Managers and admins must use
+  it; customers may. Secrets are encrypted at rest, a code works only once, wrong codes are rate limited,
+  and recovery codes are single-use and stored as keyed hashes. "Trust this device" skips the code for
+  30 days (random cookie, stored only as a hash; forgotten when the password changes). The API asks staff
+  for the code too (otp field). An admin can reset someone's two-factor from the user list.
+- **Audit log** (/admin/audit): every change by a manager or admin, in the back office and through the
+  API, is recorded with who, what, result and IP. The table is append-only; the application has no
+  way to edit or delete entries. Security changes such as turning two-factor on are recorded too.
 - Strict Content-Security-Policy, frame denial and referrer policy; all assets are served locally.
 - CI runs CodeQL, gitleaks and dependency review. See [SECURITY.md](SECURITY.md).
 

@@ -37,6 +37,7 @@ public class AuthApiController {
     private final JwtService jwt;
     private final RefreshTokenService refreshTokens;
     private final UserService users;
+    private final com.marzouki.shop.security.mfa.TwoFactorService twoFactor;
 
     @PostMapping("/auth/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -55,6 +56,15 @@ public class AuthApiController {
         Authentication result = authentication.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password()));
         User user = users.findByEmail(result.getName());
+        if (user.isTotpEnabled() || twoFactor.isRequiredFor(user.getRole())) {
+            if (!user.isTotpEnabled()) {
+                throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Set up two-factor authentication on the website before using the API");
+            }
+            if (request.otp() == null || !twoFactor.verify(user.getId(), request.otp())) {
+                throw new BadCredentialsException("A valid two-factor code is required");
+            }
+        }
         return tokensFor(refreshTokens.issue(user));
     }
 

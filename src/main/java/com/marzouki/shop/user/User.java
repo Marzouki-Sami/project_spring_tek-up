@@ -49,6 +49,17 @@ public class User {
     @Column(name = "locked_until")
     private Instant lockedUntil;
 
+    /** The authenticator secret, encrypted. Set only while two-factor authentication is on. */
+    @Column(name = "totp_secret")
+    private String totpSecret;
+
+    @Column(name = "totp_enabled", nullable = false)
+    private boolean totpEnabled;
+
+    /** The last 30-second step a code was accepted for, so a code can never be used twice. */
+    @Column(name = "totp_last_step")
+    private Long totpLastStep;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 

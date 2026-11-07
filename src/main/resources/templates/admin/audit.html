@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Audit log')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('audit')}"></nav>
+<main class="container">
+    <h1 class="h3 mb-1">Audit log</h1>
+    <p class="text-secondary mb-4">Every change made by a manager or admin, and every security change to an account. Entries cannot be edited or deleted.</p>
+
+    <section class="panel p-0">
+        <form class="panel-toolbar" method="get" th:action="@{/admin/audit}">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-lg">
+                    <label class="form-label small mb-1" for="q">Search</label>
+                    <input class="form-control form-control-sm" id="q" type="search" name="q" th:value="${q}" maxlength="80" placeholder="Person, action, id or detail">
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <label class="form-label small mb-1" for="outcome">Result</label>
+                    <select class="form-select form-select-sm" id="outcome" name="outcome" data-autosubmit>
+                        <option value="" th:selected="${outcome == ''}">All results</option>
+                        <option value="OK" th:selected="${outcome == 'OK'}">Done</option>
+                        <option value="REJECTED" th:selected="${outcome == 'REJECTED'}">Refused</option>
+                        <option value="ERROR" th:selected="${outcome == 'ERROR'}">Failed</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <label class="form-label small mb-1" for="from">From</label>
+                    <input class="form-control form-control-sm" id="from" type="date" name="from" th:value="${from}">
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <label class="form-label small mb-1" for="to">To</label>
+                    <input class="form-control form-control-sm" id="to" type="date" name="to" th:value="${to}">
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <label class="form-label small mb-1" for="size">Per page</label>
+                    <select class="form-select form-select-sm" id="size" name="size" data-autosubmit>
+                        <option th:each="n : ${sizes}" th:value="${n}" th:selected="${n == size}" th:text="${n}">50</option>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-auto"><button class="btn btn-sm btn-outline-secondary w-100" type="submit">Filter</button></div>
+            </div>
+        </form>
+        <div class="table-scroll">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Item</th><th>Result</th><th>Details</th><th>IP</th></tr></thead>
+                <tbody>
+                    <tr th:if="${entries.empty}"><td colspan="7" class="empty">Nothing matches.</td></tr>
+                    <tr th:each="e : ${entries.content}">
+                        <td class="text-nowrap"><span th:text="${#temporals.format(e.occurredAt, 'yyyy-MM-dd HH:mm:ss')}">2026-01-01 10:00:00</span></td>
+                        <td th:text="${e.actorEmail != null} ? ${e.actorEmail} : 'system'">who</td>
+                        <td><code th:text="${e.action}">products.update</code></td>
+                        <td class="text-nowrap" th:text="${e.entityType != null} ? (${e.entityType} + (${e.entityId != null} ? ' #' + ${e.entityId} : '')) : '-'">products #5</td>
+                        <td>
+                            <span class="badge" th:classappend="${e.outcome == 'OK'} ? 'text-bg-success' : (${e.outcome == 'REJECTED'} ? 'text-bg-warning' : 'text-bg-danger')"
+                                  th:text="${e.outcome == 'OK'} ? 'Done' : (${e.outcome == 'REJECTED'} ? 'Refused' : 'Failed')">Done</span>
+                        </td>
+                        <td class="small text-secondary" th:text="${e.summary}">Details</td>
+                        <td class="small text-secondary text-nowrap" th:text="${e.ip}">127.0.0.1</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="panel-footer d-flex flex-wrap justify-content-between align-items-center gap-2" th:if="${entries.totalElements > 0}">
+            <span class="small text-secondary" th:text="'Showing ' + (${entries.number} * ${entries.size} + 1) + '-' + (${entries.number} * ${entries.size} + ${entries.numberOfElements}) + ' of ' + ${entries.totalElements}">Showing 1-50 of 90</span>
+            <nav aria-label="Pages" th:if="${entries.totalPages > 1}">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${entries.first} ? 'disabled'"><a class="page-link" th:href="@{/admin/audit(q=${q},outcome=${outcome},from=${from},to=${to},size=${size},page=${entries.number - 1})}">Previous</a></li>
+                    <li class="page-item disabled"><span class="page-link" th:text="${entries.number + 1} + ' / ' + ${entries.totalPages}">1 / 2</span></li>
+                    <li class="page-item" th:classappend="${entries.last} ? 'disabled'"><a class="page-link" th:href="@{/admin/audit(q=${q},outcome=${outcome},from=${from},to=${to},size=${size},page=${entries.number + 1})}">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
+</body>
+</html>

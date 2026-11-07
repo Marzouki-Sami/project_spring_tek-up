@@ -24,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AdminUserController {
 
     private final UserService users;
+    private final com.marzouki.shop.security.mfa.TwoFactorService twoFactor;
 
     @GetMapping
     public String list(@AuthenticationPrincipal AppUserDetails me, Model model) {
@@ -45,6 +46,11 @@ public class AdminUserController {
                              @RequestParam boolean enabled, RedirectAttributes flash) {
         return run(flash, enabled ? "Account enabled" : "Account disabled",
                 () -> users.setEnabled(me.getId(), id, enabled));
+    }
+
+    @PostMapping("/{id}/reset-2fa")
+    public String reset2fa(@PathVariable Long id, RedirectAttributes flash) {
+        return run(flash, "Two-factor authentication was reset. The user sets it up again at the next sign-in.", () -> twoFactor.reset(id));
     }
 
     @PostMapping("/{id}/unlock")

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Security')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('account')}"></nav>
+<main class="container narrow">
+    <h1 class="h3 mb-1">Sign-in security</h1>
+    <p class="text-secondary mb-4">Protect your account with a second step at sign-in.</p>
+
+    <section class="panel mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+            <h2 class="h5 mb-0">Authenticator app</h2>
+            <span class="badge" th:classappend="${enabled} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${enabled} ? 'On' : 'Off'">Off</span>
+        </div>
+        <div th:unless="${enabled}">
+            <p class="text-secondary" th:text="${required} ? 'Your role requires it.' : 'Use an app like Google Authenticator to confirm it is really you.'">Info</p>
+            <a class="btn btn-primary" th:href="@{/2fa/setup}">Set up</a>
+        </div>
+        <div th:if="${enabled}">
+            <p class="text-secondary mb-0">You have <strong th:text="${codesLeft}">10</strong> unused recovery codes and <strong th:text="${devices}">0</strong> trusted
+                <span th:text="${devices == 1} ? 'device' : 'devices'">devices</span>.</p>
+        </div>
+    </section>
+
+    <section class="panel mb-4" th:if="${enabled}">
+        <h2 class="h6">New recovery codes</h2>
+        <p class="text-secondary small">Replaces your old codes. Confirm with a code from your app.</p>
+        <form class="row g-2" th:action="@{/account/security/recovery-codes}" method="post">
+            <div class="col-sm-6"><input class="form-control" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="Six-digit code" aria-label="Six-digit code" required></div>
+            <div class="col-auto"><button class="btn btn-outline-primary" type="submit">Create new codes</button></div>
+        </form>
+    </section>
+
+    <section class="panel mb-4" th:if="${enabled}">
+        <h2 class="h6">Trusted devices</h2>
+        <p class="text-secondary small">Browsers you chose to trust skip the code for <span th:text="${trustDays}">30</span> days. Forget them if you lost a device. Changing your password also forgets them.</p>
+        <form th:action="@{/account/security/devices/forget}" method="post" data-confirm="Forget all trusted devices?">
+            <button class="btn btn-outline-secondary" type="submit" th:disabled="${devices == 0}">Forget all trusted devices</button>
+        </form>
+    </section>
+
+    <section class="panel" th:if="${enabled and !required}">
+        <h2 class="h6">Turn off</h2>
+        <form class="row g-2" th:action="@{/account/security/disable}" method="post" data-confirm="Turn off two-factor authentication?">
+            <div class="col-sm-6"><input class="form-control" type="password" name="password" autocomplete="current-password" placeholder="Your password" aria-label="Your password" required></div>
+            <div class="col-auto"><button class="btn btn-outline-danger" type="submit">Turn off</button></div>
+        </form>
+    </section>
+    <p class="text-secondary small" th:if="${enabled and required}">Managers and admins cannot turn this off.</p>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

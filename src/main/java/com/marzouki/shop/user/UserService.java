@@ -19,6 +19,7 @@ public class UserService {
     private final UserRepository users;
     private final RefreshTokenRepository refreshTokens;
     private final PasswordEncoder encoder;
+    private final com.marzouki.shop.security.mfa.TwoFactorService twoFactor;
     private final EmailTokenService emailTokens;
     private final org.springframework.context.ApplicationEventPublisher events;
 
@@ -89,6 +90,7 @@ public class UserService {
         }
         user.setPasswordHash(encoder.encode(form.getNewPassword()));
         refreshTokens.revokeAllForUser(id);
+        twoFactor.forgetDevices(id);
     }
 
     @Transactional
@@ -153,6 +155,7 @@ public class UserService {
         user.setPasswordHash(encoder.encode(newPassword));
         user.setEmailVerified(true);
         user.setFailedAttempts(0);
+        twoFactor.forgetDevices(user.getId());
         user.setLockedUntil(null);
         refreshTokens.revokeAllForUser(user.getId());
     }

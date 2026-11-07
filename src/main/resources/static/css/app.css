@@ -235,3 +235,15 @@ a.status-row:hover { color: var(--shop-accent); }
     .site-nav .nav-actions { margin-top: .75rem; padding-top: 1rem; border-top: 1px solid var(--shop-line); }
     .site-nav .nav-actions > .dropdown { margin-left: auto; }
 }
+
+/* Two-factor pages */
+.auth-card-wide { max-width: 34rem; }
+.steps { padding-left: 1.2rem; color: var(--bs-body-color); }
+.steps li { margin-bottom: 1rem; }
+.qr-box { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: .75rem; }
+.qr { border-radius: .75rem; border: 1px solid var(--shop-line); background: #fff; }
+.secret-key { font-size: 1rem; letter-spacing: .06em; word-break: break-all; }
+.code-input { text-align: center; letter-spacing: .3em; font-variant-numeric: tabular-nums; }
+.code-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; padding: 1rem; margin: 0;
+    border: 1px solid var(--shop-line); border-radius: .75rem; background: var(--shop-surface); }
+.code-grid code { font-size: 1rem; letter-spacing: .08em; }
