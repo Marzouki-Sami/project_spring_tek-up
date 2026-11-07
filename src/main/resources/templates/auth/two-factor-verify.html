@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Two-factor sign-in')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('')}"></nav>
+<main class="container">
+    <div class="auth-card">
+        <h1 class="h4 mb-1">Two-factor sign-in</h1>
+        <p class="text-secondary mb-4">Enter the six-digit code from your authenticator app, or one of your recovery codes.</p>
+        <form th:action="@{/2fa/verify}" method="post" novalidate>
+            <label class="form-label" for="code">Code</label>
+            <input class="form-control form-control-lg code-input mb-3" id="code" name="code" inputmode="text" autocomplete="one-time-code" maxlength="20" required autofocus>
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="trust" name="trust" value="true">
+                <label class="form-check-label" for="trust">Trust this device for <span th:text="${trustDays}">30</span> days</label>
+            </div>
+            <button class="btn btn-primary w-100" type="submit">Verify</button>
+        </form>
+        <form class="mt-3 text-center" th:action="@{/logout}" method="post"><button class="btn btn-link btn-sm text-secondary" type="submit">Sign out</button></form>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

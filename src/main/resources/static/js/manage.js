@@ -32,6 +32,18 @@
         sync();
     });
 
+    // Copy the text of an element (recovery codes) to the clipboard.
+    document.querySelectorAll('[data-copy]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var target = document.querySelector(button.getAttribute('data-copy'));
+            if (!target || !navigator.clipboard) { return; }
+            var text = Array.prototype.map.call(target.querySelectorAll('code'), function (c) { return c.textContent; }).join('\n');
+            navigator.clipboard.writeText(text).then(function () {
+                if (window.shopToast) { window.shopToast('success', 'Copied to the clipboard'); }
+            });
+        });
+    });
+
     // Bulk actions on the variants table.
     var bulk = document.querySelector('[data-bulk]');
     if (!bulk) { return; }

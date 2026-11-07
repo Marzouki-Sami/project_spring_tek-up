@@ -9,7 +9,7 @@
     <div class="table-responsive">
         <table class="table table-hover bg-white">
             <thead>
-                <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th class="text-end">Actions</th></tr>
+                <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>2FA</th><th class="text-end">Actions</th></tr>
             </thead>
             <tbody>
                 <tr th:each="u : ${users}">
@@ -29,7 +29,15 @@
                         <span class="badge text-bg-warning" th:if="${u.enabled and u.isLockedAt(now)}">Locked</span>
                         <span class="badge text-bg-secondary" th:unless="${u.enabled}">Disabled</span>
                     </td>
+                    <td>
+                        <span class="badge text-bg-success" th:if="${u.totpEnabled}">On</span>
+                        <span class="badge text-bg-secondary" th:unless="${u.totpEnabled}">Off</span>
+                    </td>
                     <td class="text-end actions">
+                        <form th:if="${u.totpEnabled and u.id != meId}" th:action="@{/admin/users/{id}/reset-2fa(id=${u.id})}" method="post"
+                              data-confirm="Reset two-factor authentication for this person? They will set it up again at their next sign-in.">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit" data-bs-toggle="tooltip" title="Use when someone lost their phone and recovery codes">Reset 2FA</button>
+                        </form>
                         <form th:if="${u.isLockedAt(now)}" th:action="@{/admin/users/{id}/unlock(id=${u.id})}" method="post">
                             <button class="btn btn-sm btn-outline-secondary" type="submit">Unlock</button>
                         </form>

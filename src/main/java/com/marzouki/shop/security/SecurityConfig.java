@@ -51,7 +51,7 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class, com.marzouki.shop.security.mfa.MfaProperties.class})
 public class SecurityConfig {
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -104,14 +104,16 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    SecurityFilterChain webChain(HttpSecurity http, com.marzouki.shop.user.UserRepository users) throws Exception {
-        http.addFilterBefore(new CurrentAccountFilter(users), org.springframework.security.web.access.intercept.AuthorizationFilter.class)
+    SecurityFilterChain webChain(HttpSecurity http, com.marzouki.shop.user.UserRepository users,
+                                 com.marzouki.shop.security.mfa.MfaProperties mfa,
+                                 com.marzouki.shop.security.mfa.MfaLoginSuccessHandler loginSuccess) throws Exception {
+        http.addFilterBefore(new CurrentAccountFilter(users, mfa.staff2fa()), org.springframework.security.web.access.intercept.AuthorizationFilter.class)
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(PUBLIC_PAGES).permitAll()
                         .requestMatchers("/manage/**").hasRole("MANAGER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
-                .formLogin(f -> f.loginPage("/login").defaultSuccessUrl("/", false).failureUrl("/login?error"))
+                .formLogin(f -> f.loginPage("/login").successHandler(loginSuccess).failureUrl("/login?error"))
                 .logout(l -> l.logoutUrl("/logout").logoutSuccessUrl("/?signedOut")
                         .invalidateHttpSession(true).deleteCookies("JSESSIONID"))
                 .headers(h -> h

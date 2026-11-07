@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Customer')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('customers')}"></nav>
+<main class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/manage/customers}">Customers</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${customer.fullName}">Name</li>
+        </ol>
+    </nav>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1" th:text="${customer.fullName}">Name</h1>
+            <p class="text-secondary mb-0"><span th:text="${user.email}">email</span>
+                <span th:if="${user.phone != null}"> · <span th:text="${user.phone}">phone</span></span>
+                · joined <span th:text="${#temporals.format(customer.joined, 'yyyy-MM-dd')}">2026-01-01</span></p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <span class="stat-pill"><i class="bi bi-bag-check"></i> <strong th:text="${customer.orders}">0</strong> orders</span>
+            <span class="stat-pill"><i class="bi bi-cash-coin"></i> <strong th:text="${#numbers.formatDecimal(customer.spent, 1, 'COMMA', 2, 'POINT')} + ' €'">0 €</strong> spent</span>
+            <span class="stat-pill" th:unless="${user.emailVerified}"><i class="bi bi-envelope-exclamation"></i> Email not confirmed</span>
+            <span class="stat-pill" th:unless="${customer.enabled}"><i class="bi bi-slash-circle"></i> Disabled</span>
+        </div>
+    </div>
+    <section class="panel p-0">
+        <div class="table-scroll">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Order</th><th>Date</th><th>Status</th><th class="num">Total</th></tr></thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(orders)}"><td colspan="4" class="empty">No orders yet.</td></tr>
+                    <tr th:each="o : ${orders}">
+                        <td><a th:href="@{/manage/orders/{id}(id=${o.id})}" th:text="'#' + ${o.id}">#1</a></td>
+                        <td class="text-nowrap" th:text="${#temporals.format(o.createdAt, 'yyyy-MM-dd HH:mm')}">date</td>
+                        <td th:text="${o.status}">PLACED</td>
+                        <td class="num" th:text="${#numbers.formatDecimal(o.total, 1, 'COMMA', 2, 'POINT')} + ' €'">0 €</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

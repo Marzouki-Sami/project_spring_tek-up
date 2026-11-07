@@ -22,10 +22,11 @@
                 <li class="nav-item"><a class="nav-link" th:classappend="${active == 'shop'} ? 'active'" th:href="@{/products}">Shop</a></li>
                 <li class="nav-item dropdown" sec:authorize="hasRole('MANAGER')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-                       th:classappend="${#strings.contains('dashboard,products,categories,subcategories,suppliers,orders,coupons,product-types,options', active)} and ${active != ''} ? 'active'">Manage</a>
+                       th:classappend="${#strings.contains('dashboard,products,categories,subcategories,suppliers,orders,customers,coupons,product-types,options', active)} and ${active != ''} ? 'active'">Manage</a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" th:href="@{/manage}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
                         <li><a class="dropdown-item" th:href="@{/manage/orders}"><i class="bi bi-receipt"></i> Orders</a></li>
+                        <li><a class="dropdown-item" th:href="@{/manage/customers}"><i class="bi bi-people"></i> Customers</a></li>
                         <li><a class="dropdown-item" th:href="@{/manage/coupons}"><i class="bi bi-ticket-perforated"></i> Coupons</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" th:href="@{/manage/products}"><i class="bi bi-box-seam"></i> Products</a></li>
@@ -39,6 +40,9 @@
                 </li>
                 <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link" th:classappend="${active == 'users'} ? 'active'" th:href="@{/admin/users}">Users</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:classappend="${active == 'audit'} ? 'active'" th:href="@{/admin/audit}">Audit log</a>
                 </li>
             </ul>
             <div class="nav-actions d-flex flex-wrap align-items-center gap-2">
@@ -54,6 +58,7 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" th:href="@{/account}"><i class="bi bi-person"></i> My account</a></li>
+                    <li><a class="dropdown-item" th:href="@{/account/security}"><i class="bi bi-shield-lock"></i> Security</a></li>
                     <li><a class="dropdown-item" th:href="@{/account/addresses}"><i class="bi bi-geo-alt"></i> Addresses</a></li>
                     <li><a class="dropdown-item" th:href="@{/account/wishlist}"><i class="bi bi-heart"></i> Wishlist</a></li>
                     <li><a class="dropdown-item" th:href="@{/account/orders}"><i class="bi bi-bag-check"></i> My orders</a></li>

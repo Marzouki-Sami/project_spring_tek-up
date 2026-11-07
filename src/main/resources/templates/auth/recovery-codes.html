@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Recovery codes')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('')}"></nav>
+<main class="container">
+    <div class="auth-card auth-card-wide">
+        <h1 class="h4 mb-1">Save your recovery codes</h1>
+        <p class="text-secondary mb-3">If you lose your phone, each of these codes signs you in once. They are shown only now, so store them somewhere safe such as a password manager.</p>
+        <ul class="code-grid list-unstyled" id="recovery-codes">
+            <li th:each="c : ${recoveryCodes}"><code th:text="${c}">ABCDE-FGHJK</code></li>
+        </ul>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            <button class="btn btn-outline-secondary" type="button" data-copy="#recovery-codes"><i class="bi bi-clipboard"></i> Copy codes</button>
+            <a class="btn btn-primary ms-auto" th:href="@{/}">I saved them, continue</a>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
+</body>
+</html>
