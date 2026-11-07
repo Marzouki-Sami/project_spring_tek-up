@@ -28,6 +28,31 @@ public class ApiExceptionHandler {
         return problem(HttpStatus.NOT_FOUND, "Not found", ex.getMessage());
     }
 
+    @ExceptionHandler(com.marzouki.shop.common.TooManyRequestsException.class)
+    ProblemDetail tooMany(com.marzouki.shop.common.TooManyRequestsException ex) {
+        return problem(HttpStatus.TOO_MANY_REQUESTS, "Too many requests", ex.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    ProblemDetail integrity() {
+        return problem(HttpStatus.CONFLICT, "Conflict", "That change conflicts with another one that just happened. Reload and try again.");
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    ProblemDetail wrongType(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "Bad request", "The value of '" + ex.getName() + "' is not valid");
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    ProblemDetail missingParameter(org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "Bad request", "The parameter '" + ex.getParameterName() + "' is required");
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    ProblemDetail wrongMethod() {
+        return problem(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed", "That method is not supported here");
+    }
+
     @ExceptionHandler(ConflictException.class)
     ProblemDetail conflict(ConflictException ex) {
         return problem(HttpStatus.CONFLICT, "Conflict", ex.getMessage());

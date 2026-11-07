@@ -51,6 +51,8 @@ public class OrderApiService {
     private final IdempotencyKeyRepository keys;
     private final Validator validator;
     private final ObjectMapper json;
+    private final com.marzouki.shop.mail.MailProperties mail;
+    private final com.marzouki.shop.user.UserRepository userRepository;
 
     /** The order a request produced and whether it was an earlier one returned again. */
     public record Placed(Long orderId, boolean replayed) {
@@ -63,6 +65,10 @@ public class OrderApiService {
         var existing = keys.findByUserIdAndKeyValue(userId, key);
         if (existing.isPresent()) {
             return replayOf(existing.get(), hash);
+        }
+        if (mail.enabled() && !userRepository.findById(userId).map(com.marzouki.shop.user.User::isEmailVerified).orElse(false)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN,
+                    "Confirm your email address before placing orders");
         }
         ShippingForm shipping = shippingFor(userId, request);
         Cart cart = new Cart();

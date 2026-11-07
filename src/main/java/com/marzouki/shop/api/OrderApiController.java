@@ -66,7 +66,7 @@ public class OrderApiController {
     }
 
     @GetMapping("/orders")
-    @Operation(summary = "List your orders", description = "status is an order status; sort is newest, oldest, total-desc or total-asc. Page size is capped at 100.")
+    @Operation(summary = "List your orders", description = "status is an order status; sort is newest, oldest, total-desc or total-asc. Page size is one of 10, 25, 50 or 100; anything else gives 25.")
     public PageResponse<OrderSummary> mine(@AuthenticationPrincipal Jwt token, @RequestParam(defaultValue = "") String status,
                                            @RequestParam(defaultValue = "") String sort, @RequestParam(defaultValue = "0") int page,
                                            @RequestParam(defaultValue = "25") int size) {

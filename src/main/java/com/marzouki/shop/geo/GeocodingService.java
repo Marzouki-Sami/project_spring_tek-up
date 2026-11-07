@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 public class GeocodingService {
 
     private static final long MIN_GAP_MILLIS = 1100;
+    private static final long MAX_WAIT_MILLIS = 3500;
 
     private final GeocodingClient client;
     private final Cache<String, List<GeoPlace>> searches = Caffeine.newBuilder()
@@ -47,6 +48,11 @@ public class GeocodingService {
         long now = System.currentTimeMillis();
         long slot = nextSlot.updateAndGet(previous -> Math.max(now, previous) + MIN_GAP_MILLIS);
         long wait = slot - MIN_GAP_MILLIS - now;
+        if (wait > MAX_WAIT_MILLIS) {
+            // Too many searches queued behind the provider's pace: fail fast instead of tying up request threads.
+            nextSlot.addAndGet(-MIN_GAP_MILLIS);
+            throw new GeocodingUnavailableException("Address search is busy");
+        }
         if (wait > 0) {
             try {
                 Thread.sleep(wait);

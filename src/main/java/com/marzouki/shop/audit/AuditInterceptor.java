@@ -52,7 +52,8 @@ public class AuditInterceptor implements HandlerInterceptor {
         List<String> words = new ArrayList<>();
         String[] parts = pattern.split("/");
         for (int i = 2; i < parts.length; i++) {
-            if (!parts[i].isEmpty() && !parts[i].startsWith("{")) {
+            boolean prefix = i == 2 && parts[i].equals("manage");
+            if (!prefix && !parts[i].isEmpty() && !parts[i].startsWith("{")) {
                 words.add(parts[i]);
             }
         }

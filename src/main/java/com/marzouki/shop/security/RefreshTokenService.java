@@ -28,6 +28,7 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository tokens;
     private final JwtProperties properties;
+    private final com.marzouki.shop.security.mfa.TwoFactorService twoFactor;
 
     /** A newly issued token: the raw value is shown once, the hash is what gets stored. */
     public record Issued(String value, User user) {
@@ -55,6 +56,11 @@ public class RefreshTokenService {
         User user = token.getUser();
         if (token.isRevoked()) {
             tokens.revokeAllForUser(user.getId());
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+        if (twoFactor.isRequiredFor(user.getRole()) && !user.isTotpEnabled()) {
+            // Promoted to staff after the token was issued: sign in again (with a code) instead of skipping the second step.
+            token.setRevoked(true);
             throw new BadCredentialsException("Invalid refresh token");
         }
         if (token.getExpiresAt().isBefore(Instant.now()) || !user.isEnabled()) {

@@ -77,7 +77,7 @@ class TwoFactorFlowTest {
         MvcResult done = mvc.perform(post("/2fa/setup").session(session).with(me).with(csrf()).param("code", currentCode(secret)))
                 .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/2fa/recovery-codes")).andReturn();
         List<String> codes = (List<String>) done.getFlashMap().get("recoveryCodes");
-        assertThat(session.getAttribute(MfaLoginSuccessHandler.VERIFIED)).isEqualTo(Boolean.TRUE);
+        assertThat(session.getAttribute(MfaLoginSuccessHandler.VERIFIED)).isEqualTo(who.getId());
         return new Enrolment(secret, codes);
     }
 
@@ -172,7 +172,7 @@ class TwoFactorFlowTest {
 
         MvcResult withCookie = mvc.perform(post("/login").with(csrf()).param("username", "mo@example.com").param("password", password)
                 .cookie(new Cookie("shop_device", token))).andReturn();
-        assertThat(withCookie.getRequest().getSession().getAttribute(MfaLoginSuccessHandler.VERIFIED)).isEqualTo(Boolean.TRUE);
+        assertThat(withCookie.getRequest().getSession().getAttribute(MfaLoginSuccessHandler.VERIFIED)).isEqualTo(manager.getId());
 
         MvcResult withoutCookie = mvc.perform(post("/login").with(csrf()).param("username", "mo@example.com").param("password", password)).andReturn();
         assertThat(withoutCookie.getRequest().getSession().getAttribute(MfaLoginSuccessHandler.VERIFIED)).isNull();
@@ -230,10 +230,24 @@ class TwoFactorFlowTest {
         enrol(manager);
         User admin = users.create("Ada", "Admin", "ada@example.com", TestPasswords.strong(), Role.ADMIN);
         MockHttpSession session = new MockHttpSession();
-        session.setAttribute(MfaLoginSuccessHandler.VERIFIED, Boolean.TRUE);
+        session.setAttribute(MfaLoginSuccessHandler.VERIFIED, admin.getId());
         mvc.perform(post("/admin/users/" + manager.getId() + "/reset-2fa").session(session)
                         .with(user(new AppUserDetails(admin))).with(csrf()))
                 .andExpect(status().is3xxRedirection());
         assertThat(userRepository.findById(manager.getId()).orElseThrow().isTotpEnabled()).isFalse();
     }
-}
+
+    @Test
+    void aSessionVerifiedForOnePersonIsNotVerifiedForAnotherWhoSignsInOnIt() throws Exception {
+        enrol(manager);
+        User other = users.create("Zed", "Other", "zed@example.com", password, Role.MANAGER);
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(MfaLoginSuccessHandler.VERIFIED, manager.getId());
+        MvcResult result = mvc.perform(post("/login").session(session).with(csrf()).param("username", "zed@example.com").param("password", password))
+                .andReturn();
+        assertThat(result.getRequest().getSession().getAttribute(MfaLoginSuccessHandler.VERIFIED)).isNull();
+        var asOther = user(new AppUserDetails(other));
+        mvc.perform(get("/manage/products").session((MockHttpSession) result.getRequest().getSession()).with(asOther))
+                .andExpect(redirectedUrl("/2fa/setup"));
+        mvc.perform(get("/manage/products").session(session).with(asOther)).andExpect(redirectedUrl("/2fa/setup"));
+    }}

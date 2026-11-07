@@ -12,7 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -27,13 +28,18 @@ public class AuditService {
 
     private final AuditRepository entries;
     private final UserRepository users;
+    private final org.springframework.transaction.PlatformTransactionManager transactions;
 
     /** Records an action by whoever is signed in on the current request. */
     public void record(String action, String method, String entityType, String entityId, String outcome, String summary) {
         try {
             Long actorId = CurrentActor.id();
             String email = actorId == null ? null : users.findById(actorId).map(u -> u.getEmail()).orElse(null);
-            save(new AuditEntry(actorId, email, action, method, entityType, entityId, outcome, summary, currentIp()));
+            AuditEntry entry = new AuditEntry(actorId, email, action, method, entityType, entityId, outcome, summary, currentIp());
+            // Its own transaction, so a failed write can never mark the caller's transaction rollback-only.
+            TransactionTemplate own = new TransactionTemplate(transactions);
+            own.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            own.executeWithoutResult(status -> entries.save(entry));
         } catch (RuntimeException e) {
             log.warn("Could not write the audit log entry for {}", action, e);
         }
@@ -42,11 +48,6 @@ public class AuditService {
     /** Shorthand for a successful action that is not a plain web request, such as a security change. */
     public void record(String action, String entityType, Object entityId, String summary) {
         record(action, null, entityType, entityId == null ? null : String.valueOf(entityId), AuditEntry.OK, summary);
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    void save(AuditEntry entry) {
-        entries.save(entry);
     }
 
     @Transactional(readOnly = true)

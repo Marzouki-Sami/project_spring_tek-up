@@ -84,6 +84,6 @@ class CurrentAccountFilter extends OncePerRequestFilter {
             return false;
         }
         HttpSession session = request.getSession(false);
-        return session == null || !Boolean.TRUE.equals(session.getAttribute(MfaLoginSuccessHandler.VERIFIED));
+        return !MfaLoginSuccessHandler.isVerified(session, current.getId());
     }
 }

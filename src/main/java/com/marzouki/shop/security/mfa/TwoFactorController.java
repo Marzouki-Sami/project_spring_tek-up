@@ -55,7 +55,7 @@ class TwoFactorController {
         try {
             List<String> codes = twoFactor.enable(user.getId(), secret, code);
             session.removeAttribute(PENDING_SECRET);
-            session.setAttribute(MfaLoginSuccessHandler.VERIFIED, Boolean.TRUE);
+            MfaLoginSuccessHandler.markVerified(session, user.getId());
             flash.addFlashAttribute("recoveryCodes", codes);
             return "redirect:/2fa/recovery-codes";
         } catch (ConflictException e) {
@@ -78,7 +78,7 @@ class TwoFactorController {
         if (!user.isTotpEnabled()) {
             return "redirect:/2fa/setup";
         }
-        if (Boolean.TRUE.equals(session.getAttribute(MfaLoginSuccessHandler.VERIFIED))) {
+        if (MfaLoginSuccessHandler.isVerified(session, me.getId())) {
             return "redirect:/";
         }
         model.addAttribute("trustDays", twoFactor.trustDays());
@@ -91,7 +91,7 @@ class TwoFactorController {
                   HttpServletResponse response, Model model) {
         try {
             if (twoFactor.verify(me.getId(), code)) {
-                request.getSession().setAttribute(MfaLoginSuccessHandler.VERIFIED, Boolean.TRUE);
+                MfaLoginSuccessHandler.markVerified(request.getSession(), me.getId());
                 if (trust) {
                     trustCookie.write(response, twoFactor.trustDevice(me.getId(), request.getHeader("User-Agent")),
                             twoFactor.trustDays());

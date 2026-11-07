@@ -69,21 +69,28 @@ public class InvoiceService {
                     return invoices.saveAndFlush(new Invoice(orderId, year, invoices.highestSequence(year) + 1, shop.getShopName(),
                             shop.getCompanyAddress(), shop.getVatNumber(), shop.getVatPercent(), shop.getInvoiceNote()));
                 });
-            } catch (DataIntegrityViolationException e) {
+            } catch (DataIntegrityViolationException | org.springframework.dao.PessimisticLockingFailureException e) {
                 if (attempt >= ATTEMPTS) {
                     throw e;
                 }
+                pause(attempt);
             }
         }
     }
 
-    /** Issues the invoice if needed and renders it. */
+    private static void pause(int attempt) {
+        try {
+            Thread.sleep(10L * attempt);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /** Issues the invoice if needed and renders it. The database is only used to read; the PDF is drawn afterwards. */
     public Document document(Long orderId) {
         Invoice invoice = issue(orderId);
-        byte[] pdf = reads.execute(status -> {
-            Order order = orders.findWithItemsById(orderId).orElseThrow(() -> new NotFoundException("Order", orderId));
-            return renderer.render(invoice, order, settings.get().getAccentColor());
-        });
+        Order order = reads.execute(status -> orders.findWithItemsById(orderId).orElseThrow(() -> new NotFoundException("Order", orderId)));
+        byte[] pdf = renderer.render(invoice, order, settings.get().getAccentColor());
         return new Document(invoice.getNumber() + ".pdf", pdf);
     }
 }
