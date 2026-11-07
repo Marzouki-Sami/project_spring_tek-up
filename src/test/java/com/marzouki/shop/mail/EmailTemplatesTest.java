@@ -76,6 +76,9 @@ class EmailTemplatesTest {
         original.setShopName("Shop");
         original.setAccentColor("#4f46e5");
         original.setSupportEmail(null);
+        original.setVatPercent(new BigDecimal("20.0"));
+        original.setVatNumber(null);
+        original.setFooterText("You received this email because of activity on your Shop account.");
         settings.save(original);
         userRepository.deleteAll();
     }

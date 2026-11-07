@@ -108,6 +108,12 @@ class InvoiceTest {
     @BeforeEach
     void data() {
         SENT.clear();
+        SettingsForm defaults = settings.form();
+        defaults.setShopName("Shop");
+        defaults.setVatPercent(new BigDecimal("20.0"));
+        defaults.setVatNumber(null);
+        defaults.setCompanyAddress(null);
+        settings.save(defaults);
         ann = users.create("Zoë", "Ñandú <b>&amp;</b>", "ann@example.com", TestPasswords.strong(), Role.CUSTOMER);
         bob = users.create("Bob", "B", "bob@example.com", TestPasswords.strong(), Role.CUSTOMER);
         manager = users.create("Mo", "Manager", "mo@example.com", TestPasswords.strong(), Role.MANAGER);
