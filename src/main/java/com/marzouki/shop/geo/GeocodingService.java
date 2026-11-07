@@ -23,8 +23,7 @@ public class GeocodingService {
             .maximumSize(2_000).expireAfterWrite(Duration.ofHours(1)).build();
     private final Cache<String, Optional<GeoPlace>> reverses = Caffeine.newBuilder()
             .maximumSize(2_000).expireAfterWrite(Duration.ofHours(1)).build();
-    private final Object pace = new Object();
-    private long lastCall;
+    private final java.util.concurrent.atomic.AtomicLong nextSlot = new java.util.concurrent.atomic.AtomicLong();
 
     GeocodingService(ObjectProvider<GeocodingClient> client) {
         this.client = client.getIfAvailable();
@@ -45,20 +44,16 @@ public class GeocodingService {
     }
 
     private <T> T throttled(java.util.function.Supplier<T> call) {
-        synchronized (pace) {
-            long wait = lastCall + MIN_GAP_MILLIS - System.currentTimeMillis();
-            if (wait > 0) {
-                try {
-                    Thread.sleep(wait);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
+        long now = System.currentTimeMillis();
+        long slot = nextSlot.updateAndGet(previous -> Math.max(now, previous) + MIN_GAP_MILLIS);
+        long wait = slot - MIN_GAP_MILLIS - now;
+        if (wait > 0) {
             try {
-                return call.get();
-            } finally {
-                lastCall = System.currentTimeMillis();
+                Thread.sleep(wait);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
+        return call.get();
     }
 }
