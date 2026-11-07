@@ -111,6 +111,8 @@
     });
     searchInput.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') { closeResults(); }
+        // Enter in the search box must search, not submit the surrounding checkout or address form.
+        if (event.key === 'Enter') { event.preventDefault(); }
     });
     document.addEventListener('click', function (event) {
         if (!results.contains(event.target) && event.target !== searchInput) { closeResults(); }

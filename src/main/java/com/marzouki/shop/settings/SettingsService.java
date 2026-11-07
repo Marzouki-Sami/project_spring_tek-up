@@ -56,11 +56,20 @@ public class SettingsService {
         s.setInvoiceNote(blankToNull(form.getInvoiceNote()));
         s.setUpdatedAt(Instant.now());
         repository.saveAndFlush(s);
-        cache.set(null);
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            cache.set(null);
+                        }
+                    });
+        } else {
+            cache.set(null);
+        }
     }
 
-    @Transactional(readOnly = true)
-    ShopSettings load() {
+    private ShopSettings load() {
         ShopSettings s = repository.findById(ShopSettings.ID).orElseGet(() -> {
             ShopSettings fallback = new ShopSettings();
             fallback.setShopName("Shop");

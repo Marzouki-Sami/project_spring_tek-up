@@ -123,7 +123,7 @@ public class SecurityConfig {
                                         + "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"))
                         .frameOptions(f -> f.deny())
                         .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                        .permissionsPolicyHeader(p -> p.policy("camera=(), microphone=(), geolocation=()")));
+                        .permissionsPolicyHeader(p -> p.policy("camera=(), microphone=(), geolocation=(self)")));
         return http.build();
     }
 

@@ -40,6 +40,7 @@ public class SettingsForm {
     @NotNull(message = "Enter the VAT rate")
     @DecimalMin(value = "0", message = "The VAT rate cannot be negative")
     @DecimalMax(value = "40", message = "Use a rate of 40% or less")
+    @jakarta.validation.constraints.Digits(integer = 2, fraction = 1, message = "Use at most one decimal")
     private BigDecimal vatPercent;
 
     @Size(max = 300, message = "Use at most 300 characters")

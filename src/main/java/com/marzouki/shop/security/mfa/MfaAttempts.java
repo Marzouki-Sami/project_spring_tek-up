@@ -19,7 +19,7 @@ class MfaAttempts {
     void check(Long userId) {
         AtomicInteger count = failures.getIfPresent(userId);
         if (count != null && count.get() >= MAX_FAILURES) {
-            throw new ConflictException("Too many wrong codes. Wait a few minutes and try again.");
+            throw new com.marzouki.shop.common.TooManyRequestsException("Too many wrong codes. Wait a few minutes and try again.");
         }
     }
 

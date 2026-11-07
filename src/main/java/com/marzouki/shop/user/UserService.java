@@ -123,6 +123,7 @@ public class UserService {
         }
         User target = get(targetId);
         target.setRole(role);
+        refreshTokens.revokeAllForUser(targetId);
         return target;
     }
 
