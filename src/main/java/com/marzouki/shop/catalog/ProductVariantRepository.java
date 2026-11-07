@@ -28,6 +28,32 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     Optional<ProductVariant> findBySku(String sku);
 
+    String MATCHING = "from ProductVariant v where v.product.id = :productId and v.active in :actives "
+            + "and v.stock between :minStock and :maxStock "
+            + "and (:q = '' or lower(v.sku) like :q escape '\\' "
+            + "or exists (select 1 from v.optionValues ov where lower(ov.label) like :q escape '\\'))";
+
+    @Query("select v " + MATCHING + " order by v.position, v.id")
+    org.springframework.data.domain.Page<ProductVariant> search(@Param("productId") Long productId,
+            @Param("actives") Collection<Boolean> actives, @Param("minStock") int minStock,
+            @Param("maxStock") int maxStock, @Param("q") String q, Pageable pageable);
+
+    @Query("select v.id " + MATCHING + " order by v.position, v.id")
+    List<Long> searchIds(@Param("productId") Long productId, @Param("actives") Collection<Boolean> actives,
+            @Param("minStock") int minStock, @Param("maxStock") int maxStock, @Param("q") String q, Pageable limit);
+
+    @Query("select v from ProductVariant v where v.product.id = :productId and v.id in :ids order by v.position, v.id")
+    List<ProductVariant> findByProductAndIds(@Param("productId") Long productId, @Param("ids") Collection<Long> ids);
+
+    long countByProductId(Long productId);
+
+    @Query("select coalesce(sum(v.stock), 0) from ProductVariant v where v.product.id = :productId and v.active = true")
+    long sellableStock(@Param("productId") Long productId);
+
+    /** Option type id and value id of every value some variant of the product uses. */
+    @Query("select distinct ov.optionType.id, ov.id from ProductVariant v join v.optionValues ov where v.product.id = :productId")
+    List<Object[]> usedValueIds(@Param("productId") Long productId);
+
     boolean existsBySkuIgnoreCase(String sku);
 
     boolean existsBySkuIgnoreCaseAndIdNot(String sku, Long id);

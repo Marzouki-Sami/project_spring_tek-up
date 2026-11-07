@@ -45,6 +45,9 @@ public class ProductService {
 
     @Transactional
     public Product create(ProductForm form) {
+        if (form.getSku() == null || form.getSku().isBlank()) {
+            form.setSku(uniqueSkuFor(form.getName()));
+        }
         requireFreeSku(form.getSku(), null);
         Product product = new Product();
         mapper.apply(form, product);
@@ -60,6 +63,9 @@ public class ProductService {
     @Transactional
     public Product update(Long id, ProductForm form) {
         Product product = get(id);
+        if (form.getSku() == null || form.getSku().isBlank()) {
+            form.setSku(product.getSku());
+        }
         if (products.existsBySkuIgnoreCaseAndIdNot(form.getSku(), id)) {
             throw new ConflictException("SKU '" + form.getSku() + "' is already used");
         }
@@ -91,6 +97,19 @@ public class ProductService {
         Product product = get(id);
         imageFiles.deleteFilesAfterCommit(product.getImages());
         products.delete(product);
+    }
+
+    private String uniqueSkuFor(String name) {
+        String base = Skus.fromText(name, 36);
+        if (base.isEmpty()) {
+            base = "PRODUCT";
+        }
+        String candidate = base;
+        int counter = 2;
+        while (products.existsBySkuIgnoreCase(candidate) || variants.existsBySkuIgnoreCase(candidate)) {
+            candidate = base + "-" + counter++;
+        }
+        return candidate;
     }
 
     private void requireFreeSku(String sku, Long ignoreVariantId) {

@@ -206,3 +206,32 @@ a.status-row:hover { color: var(--shop-accent); }
 [data-bs-theme="dark"] .geo-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.95) contrast(.9); }
 [data-bs-theme="dark"] .leaflet-control-attribution { background: rgba(20, 20, 35, .8); color: #b8b8d0; }
 [data-bs-theme="dark"] .leaflet-control-attribution a { color: #a5a0ff; }
+
+/* Back-office tables and toolbars */
+.stat-pill { display: inline-flex; align-items: center; gap: .45rem; padding: .4rem .9rem; border: 1px solid var(--shop-line);
+    border-radius: 999px; background: var(--shop-surface); color: var(--shop-muted); font-size: .875rem; }
+.stat-pill .bi { color: var(--shop-accent); }
+.stat-pill strong { color: var(--bs-body-color); }
+.panel-toolbar { padding: 1rem 1.25rem; border-bottom: 1px solid var(--shop-line); }
+.panel-footer { padding: .85rem 1.25rem; border-top: 1px solid var(--shop-line); }
+.bulk-bar { padding: .85rem 1.25rem; border-bottom: 1px solid var(--shop-line); background: rgba(79, 70, 229, .05); }
+.table-scroll { max-height: 32rem; overflow: auto; }
+.table-scroll thead th { position: sticky; top: 0; z-index: 2; background: var(--shop-surface); box-shadow: 0 1px 0 var(--shop-line);
+    font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--shop-muted); white-space: nowrap; }
+.table-scroll th, .table-scroll td { padding: .65rem .9rem; }
+.table-scroll th:first-child, .table-scroll td:first-child { padding-left: 1.25rem; }
+.table-scroll th:last-child, .table-scroll td:last-child { padding-right: 1.25rem; }
+.check-col { width: 2.75rem; }
+.table-scroll td.fw-medium { white-space: nowrap; }
+[data-bs-theme="dark"] .bulk-bar { background: rgba(129, 140, 248, .08); }
+
+/* Collapsed navigation on small screens */
+@media (max-width: 991.98px) {
+    .site-nav .navbar-collapse { padding: .5rem 0 1.1rem; }
+    .site-nav .navbar-nav { gap: .1rem; }
+    .site-nav .nav-link { padding: .6rem .25rem; }
+    .site-nav .dropdown-menu { border: 0; background: transparent; box-shadow: none; padding: 0 0 .25rem 1rem; }
+    .site-nav .navbar-nav .dropdown-item { padding: .5rem .6rem; border-radius: .5rem; }
+    .site-nav .nav-actions { margin-top: .75rem; padding-top: 1rem; border-top: 1px solid var(--shop-line); }
+    .site-nav .nav-actions > .dropdown { margin-left: auto; }
+}

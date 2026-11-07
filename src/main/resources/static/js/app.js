@@ -29,6 +29,10 @@ document.querySelectorAll('[data-color]').forEach(function (element) {
         });
     });
 })();
+// Tooltips: any element with data-bs-toggle="tooltip" and a title explains itself on hover or focus.
+document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+    if (window.bootstrap) { window.bootstrap.Tooltip.getOrCreateInstance(element, { trigger: 'hover focus' }); }
+});
 // Toast notifications. The server renders its messages into #toast-area; this shows them, and
 // window.shopToast(kind, message) lets scripts raise the same kind of message (success, info, warning, error).
 (function () {

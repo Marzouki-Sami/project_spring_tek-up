@@ -8,8 +8,8 @@
     <form th:action="${action}" th:object="${form}" method="post" novalidate>
         <div class="alert alert-danger" role="alert" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
         <div class="mb-3">
-            <label class="form-label" for="sku">SKU</label>
-            <input class="form-control" th:classappend="${#fields.hasErrors('sku')} ? 'is-invalid'" type="text" id="sku" th:field="*{sku}">
+            <label class="form-label" for="sku">SKU <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="The stock-keeping code. It is suggested from the name as you type, and you can change it. Leave it empty to have one made for you."></i></label>
+            <input class="form-control" th:classappend="${#fields.hasErrors('sku')} ? 'is-invalid'" type="text" id="sku" th:field="*{sku}" data-sku-from="name" placeholder="Made from the name">
             <div class="invalid-feedback" th:errors="*{sku}"></div>
         </div>
         <div class="mb-3">
@@ -72,5 +72,6 @@
     </form>
 </main>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
 </body>
 </html>

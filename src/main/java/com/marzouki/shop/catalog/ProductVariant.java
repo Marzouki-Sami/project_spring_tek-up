@@ -46,11 +46,21 @@ public class ProductVariant {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    /** Sorted ids of the option values, e.g. "3-7". Unique per product; kept in step by {@link #syncOptionKey()}. */
+    @Column(name = "option_key", nullable = false, length = 255)
+    private String optionKey = "";
+
     @ManyToMany
     @JoinTable(name = "variant_option_values",
             joinColumns = @JoinColumn(name = "variant_id"),
             inverseJoinColumns = @JoinColumn(name = "option_value_id"))
     private Set<OptionValue> optionValues = new LinkedHashSet<>();
+
+    @PrePersist
+    @PreUpdate
+    void syncOptionKey() {
+        optionKey = optionValues.stream().map(OptionValue::getId).sorted().map(String::valueOf).collect(Collectors.joining("-"));
+    }
 
     public BigDecimal getEffectivePrice() {
         return price != null ? price : product.getPrice();

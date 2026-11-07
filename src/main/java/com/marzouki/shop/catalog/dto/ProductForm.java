@@ -15,7 +15,7 @@ import lombok.Setter;
 @Setter
 public class ProductForm {
 
-    @NotBlank(message = "Enter a SKU")
+    /** Optional: when left empty it is made from the product name. */
     @Size(max = 40, message = "Use at most 40 characters")
     @Pattern(regexp = "[A-Za-z0-9._-]*", message = "Use letters, digits, dots, dashes and underscores only")
     private String sku;
