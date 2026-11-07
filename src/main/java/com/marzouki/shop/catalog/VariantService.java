@@ -68,17 +68,21 @@ public class VariantService {
     }
 
     private Page<ProductVariant> search(Long productId, VariantQuery query, int pageNumber) {
-        Filter f = Filter.of(query.getStatus());
+        Filter f = Filter.of(query.getStatus(), lowLevel(productId));
         return variants.search(productId, f.actives(), f.minStock(), f.maxStock(), query.likePattern(),
                 PageRequest.of(pageNumber, query.getSize()));
     }
 
+    private int lowLevel(Long productId) {
+        return products.findById(productId).map(Product::getLowStockLevel).orElse(Product.DEFAULT_LOW_STOCK);
+    }
+
     private record Filter(List<Boolean> actives, int minStock, int maxStock) {
-        static Filter of(VariantQuery.Status status) {
+        static Filter of(VariantQuery.Status status, int lowLevel) {
             return switch (status) {
                 case ACTIVE -> new Filter(List.of(true), 0, Integer.MAX_VALUE);
                 case INACTIVE -> new Filter(List.of(false), 0, Integer.MAX_VALUE);
-                case LOW -> new Filter(List.of(true), 1, OrderService.LOW_STOCK_LEVEL);
+                case LOW -> new Filter(List.of(true), 1, lowLevel);
                 case OUT -> new Filter(List.of(true, false), 0, 0);
                 default -> new Filter(List.of(true, false), 0, Integer.MAX_VALUE);
             };
@@ -264,7 +268,7 @@ public class VariantService {
 
     private List<ProductVariant> targets(Long productId, VariantQuery query, BulkVariantForm form) {
         if (form.getScope() == BulkVariantForm.Scope.FILTERED) {
-            Filter f = Filter.of(query.getStatus());
+            Filter f = Filter.of(query.getStatus(), lowLevel(productId));
             List<Long> ids = variants.searchIds(productId, f.actives(), f.minStock(), f.maxStock(), query.likePattern(),
                     PageRequest.of(0, MAX_BULK));
             return ids.isEmpty() ? List.of() : variants.findByProductAndIds(productId, ids);

@@ -3,7 +3,7 @@
 <head th:fragment="head(title)">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${title} + ' · Shop'">Shop</title>
+    <title th:text="${title} + ' · ' + (${shopName} ?: 'Shop')">Shop</title>
     <script th:src="@{/js/theme.js}"></script>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
@@ -12,7 +12,7 @@
 <body>
 <nav th:fragment="nav(active)" class="navbar navbar-expand-lg site-nav sticky-top">
     <div class="container">
-        <a class="navbar-brand" th:href="@{/}"><i class="bi bi-bag-heart-fill"></i> Shop</a>
+        <a class="navbar-brand" th:href="@{/}"><i class="bi bi-bag-heart-fill"></i> <span th:text="${shopName} ?: 'Shop'">Shop</span></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu"
                 aria-controls="menu" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -38,13 +38,16 @@
                         <li><a class="dropdown-item" th:href="@{/manage/options}"><i class="bi bi-sliders"></i> Options</a></li>
                     </ul>
                 </li>
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'users'} ? 'active'" th:href="@{/admin/users}">Users</a>
-                </li>
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'audit'} ? 'active'" th:href="@{/admin/audit}">Audit log</a>
-                </li>
-            </ul>
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                       th:classappend="${#strings.contains('users,audit,emails,settings', active)} and ${active != ''} ? 'active'">Admin</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/admin/users}"><i class="bi bi-people"></i> Users</a></li>
+                        <li><a class="dropdown-item" th:href="@{/admin/emails}"><i class="bi bi-envelope"></i> Emails</a></li>
+                        <li><a class="dropdown-item" th:href="@{/admin/settings}"><i class="bi bi-gear"></i> Settings</a></li>
+                        <li><a class="dropdown-item" th:href="@{/admin/audit}"><i class="bi bi-journal-text"></i> Audit log</a></li>
+                    </ul>
+                </li>            </ul>
             <div class="nav-actions d-flex flex-wrap align-items-center gap-2">
             <a class="cart-link" th:href="@{/cart}" aria-label="Shopping cart"><i class="bi bi-cart3"></i><span class="cart-count" th:if="${cartCount > 0}" th:text="${cartCount}">2</span></a>
             <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark mode" title="Switch theme"><i class="bi bi-circle-half"></i></button>

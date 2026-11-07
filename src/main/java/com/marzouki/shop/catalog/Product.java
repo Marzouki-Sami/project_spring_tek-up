@@ -59,12 +59,22 @@ public class Product {
     @OrderBy("position, id")
     private List<com.marzouki.shop.media.ProductImage> images = new ArrayList<>();
 
+    /** Stock at or below which the item counts as low. Empty means the shop default. */
+    @Column(name = "low_stock_threshold")
+    private Integer lowStockThreshold;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
     /** The image shown on cards and first in the gallery, or null when the product has none. */
     public com.marzouki.shop.media.ProductImage getPrimaryImage() {
         return images.isEmpty() ? null : images.get(0);
+    }
+
+    public static final int DEFAULT_LOW_STOCK = 5;
+
+    public int getLowStockLevel() {
+        return lowStockThreshold != null ? lowStockThreshold : DEFAULT_LOW_STOCK;
     }
 
     public ProductVariant addVariant(String sku, int stock) {

@@ -33,17 +33,20 @@ class NotificationService {
     private final UserRepository users;
     private final OrderRepository orders;
     private final ProductVariantRepository variantRepository;
+    private final SendThrottle throttle;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     void onVerification(UserEvents.VerificationRequested event) {
-        users.findById(event.userId()).ifPresent(u -> deliver("verification", () -> composer.verification(u, event.token())));
+        users.findById(event.userId()).filter(u -> throttle.allow("verify", u.getEmail()))
+                .ifPresent(u -> deliver("verification", () -> composer.verification(u, event.token())));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     void onPasswordReset(UserEvents.PasswordResetRequested event) {
-        users.findById(event.userId()).ifPresent(u -> deliver("password reset", () -> composer.passwordReset(u, event.token())));
+        users.findById(event.userId()).filter(u -> throttle.allow("reset", u.getEmail()))
+                .ifPresent(u -> deliver("password reset", () -> composer.passwordReset(u, event.token())));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -67,7 +70,7 @@ class NotificationService {
         if (variant == null) {
             return;
         }
-        List<User> staff = users.findByRoleInAndEnabledTrue(List.of(Role.MANAGER, Role.ADMIN));
+        List<User> staff = users.findByRoleInAndEnabledTrueAndLowStockAlertsTrue(List.of(Role.MANAGER, Role.ADMIN));
         for (User person : staff) {
             deliver("low stock alert", () -> composer.lowStock(person.getEmail(), variant));
         }

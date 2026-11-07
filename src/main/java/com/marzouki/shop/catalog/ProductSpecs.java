@@ -20,11 +20,16 @@ final class ProductSpecs {
     }
 
     private static Subquery<Long> variantWhere(jakarta.persistence.criteria.CriteriaQuery<?> query, CriteriaBuilder cb,
-                                               Root<Product> product, java.util.function.BiFunction<CriteriaBuilder, Root<ProductVariant>, Predicate> extra) {
+                                               Root<Product> product, VariantPredicate extra) {
         Subquery<Long> sub = query.subquery(Long.class);
         Root<ProductVariant> v = sub.from(ProductVariant.class);
-        sub.select(v.get("id")).where(cb.equal(v.get("product"), product), cb.isTrue(v.get("active")), extra.apply(cb, v));
+        sub.select(v.get("id")).where(cb.equal(v.get("product"), product), cb.isTrue(v.get("active")), extra.apply(cb, v, product));
         return sub;
+    }
+
+    @FunctionalInterface
+    private interface VariantPredicate {
+        Predicate apply(CriteriaBuilder cb, Root<ProductVariant> variant, Root<Product> product);
     }
 
     private static Expression<Double> averageRating(jakarta.persistence.criteria.CriteriaQuery<?> query, CriteriaBuilder cb, Root<Product> product) {
@@ -52,7 +57,7 @@ final class ProductSpecs {
                 all.add(cb.lessThanOrEqualTo(root.<java.math.BigDecimal>get("price"), q.maxPriceValue()));
             }
             if (q.isInStock()) {
-                all.add(cb.exists(variantWhere(query, cb, root, (b, v) -> b.greaterThan(v.<Integer>get("stock"), 0))));
+                all.add(cb.exists(variantWhere(query, cb, root, (b, v, p) -> b.greaterThan(v.<Integer>get("stock"), 0))));
             }
             if (q.getMinRating() > 0) {
                 all.add(cb.greaterThanOrEqualTo(averageRating(query, cb, root), (double) q.getMinRating()));
@@ -70,9 +75,9 @@ final class ProductSpecs {
             case "ACTIVE" -> (root, query, cb) -> cb.isTrue(root.get("active"));
             case "HIDDEN" -> (root, query, cb) -> cb.isFalse(root.get("active"));
             case "LOW" -> (root, query, cb) -> cb.exists(variantWhere(query, cb, root,
-                    (b, v) -> b.lessThanOrEqualTo(v.<Integer>get("stock"), OrderService.LOW_STOCK_LEVEL)));
+                    (b, v, p) -> b.lessThanOrEqualTo(v.<Integer>get("stock"), b.coalesce(p.<Integer>get("lowStockThreshold"), Product.DEFAULT_LOW_STOCK))));
             case "OUT" -> (root, query, cb) -> cb.not(cb.exists(variantWhere(query, cb, root,
-                    (b, v) -> b.greaterThan(v.<Integer>get("stock"), 0))));
+                    (b, v, p) -> b.greaterThan(v.<Integer>get("stock"), 0))));
             default -> Specs.none();
         };
         return Specs.<Product>text(q.like(), "name", "sku").and(filter);

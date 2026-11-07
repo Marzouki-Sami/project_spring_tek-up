@@ -357,4 +357,16 @@ class VariantWorkspaceTest {
                 .andExpect(flash().attribute("error", "This product's type does not offer that option"));
         assertThat(idsOf("Material")).isEmpty();
     }
-}
+    @Test
+    void aProductCanDefineItsOwnLowStockLevel() {
+        BulkVariantForm add = bulk(BulkVariantForm.Action.ADJUST_STOCK, idsOfFirst(1));
+        add.setDelta(15);
+        variantService.bulk(tee.getId(), new VariantQuery(), add);
+        assertThat(variantService.overview(tee.getId(), query("", "LOW", 25)).page().getTotalElements()).isZero();
+
+        ProductForm form = productService.formFor(tee.getId());
+        form.setLowStockThreshold(20);
+        productService.update(tee.getId(), form);
+        assertThat(variantService.overview(tee.getId(), query("", "LOW", 25)).page().getTotalElements()).isEqualTo(1);
+        assertThat(productService.get(tee.getId()).getLowStockLevel()).isEqualTo(20);
+    }}

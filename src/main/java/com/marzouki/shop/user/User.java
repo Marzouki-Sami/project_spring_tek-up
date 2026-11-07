@@ -60,6 +60,10 @@ public class User {
     @Column(name = "totp_last_step")
     private Long totpLastStep;
 
+    /** Managers and admins can switch low-stock emails off. */
+    @Column(name = "low_stock_alerts", nullable = false)
+    private boolean lowStockAlerts = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 

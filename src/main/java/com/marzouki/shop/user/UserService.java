@@ -86,6 +86,9 @@ public class UserService {
         user.setFirstName(form.getFirstName().trim());
         user.setLastName(form.getLastName().trim());
         user.setPhone(form.getPhone() == null || form.getPhone().isBlank() ? null : form.getPhone().trim());
+        if (user.getRole().isStaff()) {
+            user.setLowStockAlerts(form.isLowStockAlerts());
+        }
         return user;
     }
 
@@ -95,6 +98,7 @@ public class UserService {
         form.setFirstName(user.getFirstName());
         form.setLastName(user.getLastName());
         form.setPhone(user.getPhone());
+        form.setLowStockAlerts(user.isLowStockAlerts());
         return form;
     }
 

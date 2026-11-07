@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Settings')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('settings')}"></nav>
+<main class="container narrow">
+    <h1 class="h3 mb-1">Settings</h1>
+    <p class="text-secondary mb-4">How the shop presents itself in emails and on invoices.</p>
+    <form th:action="@{/admin/settings}" th:object="${form}" method="post" novalidate>
+        <section class="panel mb-4">
+            <h2 class="h5 mb-3">Brand</h2>
+            <div class="mb-3">
+                <label class="form-label" for="shopName">Shop name</label>
+                <input class="form-control" id="shopName" th:field="*{shopName}" th:errorclass="is-invalid">
+                <div class="invalid-feedback" th:errors="*{shopName}"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="accentColor">Accent colour <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Used for the brand name and buttons in emails and on invoices."></i></label>
+                <input class="form-control form-control-color" type="color" id="accentColor" th:field="*{accentColor}">
+                <div class="text-danger small" th:errors="*{accentColor}"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="footerText">Email footer</label>
+                <input class="form-control" id="footerText" th:field="*{footerText}" th:errorclass="is-invalid">
+                <div class="invalid-feedback" th:errors="*{footerText}"></div>
+            </div>
+            <div>
+                <label class="form-label" for="supportEmail">Support email <span class="text-secondary">(optional)</span></label>
+                <input class="form-control" id="supportEmail" type="email" th:field="*{supportEmail}" th:errorclass="is-invalid">
+                <div class="invalid-feedback" th:errors="*{supportEmail}"></div>
+            </div>
+        </section>
+        <section class="panel mb-4">
+            <h2 class="h5 mb-3">Company and VAT</h2>
+            <div class="mb-3">
+                <label class="form-label" for="companyAddress">Company address <span class="text-secondary">(optional)</span></label>
+                <textarea class="form-control" id="companyAddress" rows="3" th:field="*{companyAddress}" th:errorclass="is-invalid"></textarea>
+                <div class="invalid-feedback" th:errors="*{companyAddress}"></div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-sm-7">
+                    <label class="form-label" for="vatNumber">VAT number <span class="text-secondary">(optional)</span></label>
+                    <input class="form-control" id="vatNumber" th:field="*{vatNumber}" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:errors="*{vatNumber}"></div>
+                </div>
+                <div class="col-sm-5">
+                    <label class="form-label" for="vatPercent">VAT rate (%) <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Shop prices include VAT. Invoices show how much of the total is VAT at this rate."></i></label>
+                    <input class="form-control" id="vatPercent" type="number" step="0.1" min="0" max="40" th:field="*{vatPercent}" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:errors="*{vatPercent}"></div>
+                </div>
+            </div>
+            <div>
+                <label class="form-label" for="invoiceNote">Invoice note <span class="text-secondary">(optional)</span></label>
+                <input class="form-control" id="invoiceNote" th:field="*{invoiceNote}" th:errorclass="is-invalid" placeholder="Thank you for your order.">
+                <div class="invalid-feedback" th:errors="*{invoiceNote}"></div>
+            </div>
+        </section>
+        <button class="btn btn-primary" type="submit">Save settings</button>
+    </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,67 +1,124 @@
 package com.marzouki.shop.mail;
 
-import com.marzouki.shop.catalog.Product;
 import com.marzouki.shop.catalog.ProductVariant;
 import com.marzouki.shop.order.Order;
+import com.marzouki.shop.settings.ShopSettings;
+import com.marzouki.shop.settings.SettingsService;
 import com.marzouki.shop.user.User;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.thymeleaf.context.Context;
 
-/** Builds each kind of email: an HTML body from a template plus a plain-text alternative. */
+/**
+ * Builds each kind of email from its wording (built in, or edited by an admin) and the shop's branding.
+ * The HTML comes from one fixed layout; the plain-text alternative is made from the same text.
+ */
 @Component
 @RequiredArgsConstructor
 public class MailComposer {
 
     private final SpringTemplateEngine templates;
     private final MailProperties properties;
+    private final EmailTemplates wording;
+    private final SettingsService settings;
+
+    /** An email's text with the placeholders filled in. */
+    public record Rendered(String subject, String heading, List<String> paragraphs, String buttonLabel) {
+    }
 
     public Email verification(User user, String token) {
-        String link = properties.baseUrl() + "/verify-email?token=" + token;
-        return build(user.getEmail(), "Confirm your email address", "verify",
-                Map.of("name", user.getFirstName(), "link", link),
-                "Hi " + user.getFirstName() + ",\n\nConfirm your email address to finish setting up your account:\n"
-                        + link + "\n\nThe link works for 2 days. If you did not sign up, ignore this message.");
+        return compose(EmailKind.VERIFY, user.getEmail(), Map.of("name", user.getFirstName()),
+                properties.baseUrl() + "/verify-email?token=" + token, null);
     }
 
     public Email passwordReset(User user, String token) {
-        String link = properties.baseUrl() + "/reset-password?token=" + token;
-        return build(user.getEmail(), "Reset your password", "reset",
-                Map.of("name", user.getFirstName(), "link", link),
-                "Hi " + user.getFirstName() + ",\n\nChoose a new password here:\n" + link
-                        + "\n\nThe link works for 1 hour. If you did not ask for this, ignore this message; "
-                        + "your password stays the same.");
+        return compose(EmailKind.RESET, user.getEmail(), Map.of("name", user.getFirstName()),
+                properties.baseUrl() + "/reset-password?token=" + token, null);
     }
 
     public Email orderConfirmation(Order order) {
-        String link = properties.baseUrl() + "/account/orders/" + order.getId();
-        return build(order.getUser().getEmail(), "Your order #" + order.getId() + " is confirmed", "order-confirmation",
-                Map.of("order", order, "name", order.getUser().getFirstName(), "link", link),
-                "Hi " + order.getUser().getFirstName() + ",\n\nThanks for your order #" + order.getId()
-                        + ". Total: " + order.getTotal() + " EUR.\nFollow it here: " + link);
+        return compose(EmailKind.ORDER_CONFIRMATION, order.getUser().getEmail(), orderValues(order),
+                properties.baseUrl() + "/account/orders/" + order.getId(), order);
     }
 
     public Email orderShipped(Order order) {
-        String link = properties.baseUrl() + "/account/orders/" + order.getId();
-        return build(order.getUser().getEmail(), "Your order #" + order.getId() + " is on its way", "order-shipped",
-                Map.of("order", order, "name", order.getUser().getFirstName(), "link", link),
-                "Hi " + order.getUser().getFirstName() + ",\n\nGood news: order #" + order.getId()
-                        + " has shipped to " + order.getCity() + ".\nDetails: " + link);
+        return compose(EmailKind.ORDER_SHIPPED, order.getUser().getEmail(), orderValues(order),
+                properties.baseUrl() + "/account/orders/" + order.getId(), order);
     }
 
     public Email lowStock(String to, ProductVariant variant) {
-        Product product = variant.getProduct();
-        String link = properties.baseUrl() + "/manage/variants/" + variant.getId() + "/stock";
-        String name = variant.getLabel() == null ? product.getName() : product.getName() + " (" + variant.getLabel() + ")";
-        return build(to, "Low stock: " + name, "low-stock",
-                Map.of("name", name, "sku", variant.getSku(), "stock", variant.getStock(), "link", link),
-                name + " (" + variant.getSku() + ") is down to " + variant.getStock() + " units.\nRestock: " + link);
+        return compose(EmailKind.LOW_STOCK, to, Map.of("product", displayName(variant), "sku", variant.getSku(),
+                "stock", String.valueOf(variant.getStock())), properties.baseUrl() + "/manage/variants/" + variant.getId() + "/stock", null);
     }
-    private Email build(String to, String subject, String template, Map<String, Object> variables, String text) {
-        Context context = new Context(Locale.ENGLISH, variables);
-        return new Email(to, subject, text, templates.process("mail/" + template, context));
+
+    public Email backInStock(User user, ProductVariant variant) {
+        return compose(EmailKind.BACK_IN_STOCK, user.getEmail(), Map.of("name", user.getFirstName(), "product", displayName(variant)),
+                properties.baseUrl() + "/products/" + variant.getProduct().getId(), null);
+    }
+
+    /** The email as it would look with sample data, using the given wording (saved or still being edited). */
+    public Rendered preview(EmailKind kind, EmailTemplates.Wording text) {
+        return render(kind, text, kind.sample(settings.shopName()));
+    }
+
+    public Email sample(EmailKind kind, String to) {
+        return build(kind, wording.resolve(kind), to, kind.sample(settings.shopName()), properties.baseUrl() + "/", null);
+    }
+
+    public Email compose(EmailKind kind, String to, Map<String, String> values, String link, Order order) {
+        Map<String, String> all = new HashMap<>(values);
+        all.put("shop", settings.shopName());
+        return build(kind, wording.resolve(kind), to, all, link, order);
+    }
+
+    private Email build(EmailKind kind, EmailTemplates.Wording text, String to, Map<String, String> values, String link, Order order) {
+        Rendered rendered = render(kind, text, values);
+        ShopSettings shop = settings.get();
+        Context context = new Context(Locale.ENGLISH);
+        context.setVariable("shop", shop.getShopName());
+        context.setVariable("accent", shop.getAccentColor());
+        context.setVariable("footer", shop.getFooterText());
+        context.setVariable("support", shop.getSupportEmail());
+        context.setVariable("heading", rendered.heading());
+        context.setVariable("paragraphs", rendered.paragraphs());
+        context.setVariable("buttonLabel", rendered.buttonLabel());
+        context.setVariable("link", link);
+        context.setVariable("section", order == null ? "NONE" : kind.getSection().name());
+        context.setVariable("order", order);
+
+        StringBuilder plain = new StringBuilder(rendered.heading()).append("\n\n")
+                .append(String.join("\n\n", rendered.paragraphs()));
+        if (link != null && !rendered.buttonLabel().isBlank()) {
+            plain.append("\n\n").append(rendered.buttonLabel()).append(": ").append(link);
+        }
+        plain.append("\n\n-- \n").append(shop.getShopName()).append("\n").append(shop.getFooterText());
+        return new Email(to, rendered.subject(), plain.toString(), templates.process("mail/message", context));
+    }
+
+    private Rendered render(EmailKind kind, EmailTemplates.Wording text, Map<String, String> values) {
+        return new Rendered(TemplateText.fill(text.subject(), values).replaceAll("[\\r\\n]+", " ").strip(),
+                TemplateText.fill(text.heading(), values), TemplateText.paragraphs(TemplateText.fill(text.body(), values)),
+                TemplateText.fill(text.buttonLabel() == null ? "" : text.buttonLabel(), values));
+    }
+
+    private static Map<String, String> orderValues(Order order) {
+        return Map.of("name", order.getUser().getFirstName(), "orderNumber", String.valueOf(order.getId()),
+                "total", money(order.getTotal()), "city", order.getCity());
+    }
+
+    private static String displayName(ProductVariant variant) {
+        String label = variant.getLabel();
+        String name = variant.getProduct().getName();
+        return label == null ? name : name + " (" + label + ")";
+    }
+
+    private static String money(BigDecimal amount) {
+        return String.format(Locale.ROOT, "%.2f €", amount);
     }
 }
