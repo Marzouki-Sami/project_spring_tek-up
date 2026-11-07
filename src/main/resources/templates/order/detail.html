@@ -13,7 +13,10 @@
     </nav>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h1 class="h3 mb-0" th:text="'Order #' + ${order.id}">Order</h1>
-        <span class="badge fs-6" th:classappend="'text-bg-' + ${order.status.color}" th:text="${order.status.label}">Placed</span>
+        <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-sm btn-outline-secondary" th:href="${manager} ? @{/manage/orders/{id}/invoice.pdf(id=${order.id})} : @{/account/orders/{id}/invoice.pdf(id=${order.id})}" th:unless="${order.status.name() == 'CANCELLED'}"><i class="bi bi-file-earmark-pdf"></i> Invoice</a>
+            <span class="badge fs-6" th:classappend="'text-bg-' + ${order.status.color}" th:text="${order.status.label}">Placed</span>
+        </div>
     </div>
     <div class="row g-4">
         <div class="col-lg-8">

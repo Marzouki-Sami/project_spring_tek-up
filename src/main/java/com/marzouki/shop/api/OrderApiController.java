@@ -37,6 +37,7 @@ public class OrderApiController {
     private static final Pattern KEY = Pattern.compile("[A-Za-z0-9_-]{8,64}");
 
     private final OrderApiService orders;
+    private final com.marzouki.shop.invoice.InvoiceService invoices;
 
     @PostMapping("/orders")
     @Operation(summary = "Place an order",
@@ -82,6 +83,20 @@ public class OrderApiController {
     @Operation(summary = "Cancel your order", description = "Only while it is still Placed. Stock and coupon use are returned.")
     public OrderResponse cancel(@AuthenticationPrincipal Jwt token, @PathVariable Long id) {
         return orders.cancel(userId(token), id);
+    }
+
+    @GetMapping(value = "/orders/{id}/invoice", produces = "application/pdf")
+    @Operation(summary = "Download the invoice of one of your orders as a PDF")
+    public ResponseEntity<byte[]> myInvoice(@AuthenticationPrincipal Jwt token, @PathVariable Long id) {
+        orders.mineById(userId(token), id);
+        return com.marzouki.shop.invoice.InvoiceController.pdf(invoices.document(id));
+    }
+
+    @GetMapping(value = "/manage/orders/{id}/invoice", produces = "application/pdf")
+    @Operation(summary = "Download the invoice of any order as a PDF (managers)")
+    public ResponseEntity<byte[]> invoice(@PathVariable Long id) {
+        orders.byId(id);
+        return com.marzouki.shop.invoice.InvoiceController.pdf(invoices.document(id));
     }
 
     @GetMapping("/manage/orders")

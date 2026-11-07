@@ -40,6 +40,14 @@ into a tested, containerised application.
   logged in `stock_movements`, and cancelling returns the items.
 - **Customers** (/manage/customers): searchable, sortable, paged list of customers with their order
   count and spend (cancelled orders excluded) and a detail page with their order history.
+- **PDF invoices**: every order gets one invoice, numbered INV-2026-000001 onwards with no repeats and no
+  gaps (a unique key per year, and a lost race retries with the next number). Prices include VAT, so the
+  invoice shows the included share at the configured rate. The seller details and VAT rate are copied
+  in when the invoice is issued, so changing the settings never alters an invoice that was already sent.
+  Rendered from an HTML template by OpenHTMLtoPDF (everything typed by customers is escaped), attached to
+  the order confirmation email and downloadable by the customer, managers and the API.
+  Emails are sent from a small separate thread pool after the request finishes (MAIL_ASYNC), so a slow
+  mail server or PDF render never holds a customer's request or a database connection.
 - **Reviews and wishlist**: verified buyers can rate and review a product (one review each, editable);
   signed-in users keep a wishlist.
 - **Coupons** (`/manage/coupons`): percentage discount with an optional expiry date and usage limit.
