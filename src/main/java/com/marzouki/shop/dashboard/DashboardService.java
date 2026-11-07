@@ -1,7 +1,8 @@
 package com.marzouki.shop.dashboard;
 
-import com.marzouki.shop.catalog.Product;
 import com.marzouki.shop.catalog.ProductRepository;
+import com.marzouki.shop.catalog.ProductVariant;
+import com.marzouki.shop.catalog.ProductVariantRepository;
 import com.marzouki.shop.order.OrderRepository;
 import com.marzouki.shop.order.OrderStatus;
 import com.marzouki.shop.user.Role;
@@ -26,6 +27,7 @@ public class DashboardService {
 
     private final OrderRepository orders;
     private final ProductRepository products;
+    private final ProductVariantRepository variants;
     private final UserRepository users;
 
     public record StatusCount(OrderStatus status, long count) {
@@ -35,7 +37,7 @@ public class DashboardService {
     }
 
     public record Overview(int days, BigDecimal revenue, long orderCount, long customers, long activeProducts,
-                           List<StatusCount> byStatus, List<TopSeller> topSellers, List<Product> lowStock) {
+                           List<StatusCount> byStatus, List<TopSeller> topSellers, List<ProductVariant> lowStock) {
     }
 
     public Overview overview() {
@@ -50,6 +52,6 @@ public class DashboardService {
                 .map(r -> new TopSeller((String) r[0], (String) r[1], ((Number) r[2]).longValue())).toList();
         return new Overview(DAYS, orders.revenueSince(since), orders.countSince(since),
                 users.countByRole(Role.CUSTOMER), products.countByActiveTrue(), byStatus, top,
-                products.findTop10ByActiveTrueAndStockLessThanEqualOrderByStockAscNameAsc(LOW_STOCK_LEVEL));
+                variants.lowStock(LOW_STOCK_LEVEL, PageRequest.of(0, 10)));
     }
 }

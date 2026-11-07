@@ -177,14 +177,14 @@ class EmailFlowTest {
         lamp.setSku("L-1");
         lamp.setName("Lamp");
         lamp.setPrice(new BigDecimal("20.00"));
-        lamp.setStock(stock);
+        lamp.addVariant("L-1", stock);
         lamp.setSubcategory(sub);
         return products.save(lamp);
     }
 
     private Order order(User buyer, Product product, int quantity) {
         Cart cart = new Cart();
-        carts.add(cart, product.getId(), quantity);
+        carts.add(cart, product.getDefaultVariant().getId(), quantity);
         ShippingForm address = new ShippingForm();
         address.setFullName("Bea Buyer");
         address.setAddress("1 Main Street");

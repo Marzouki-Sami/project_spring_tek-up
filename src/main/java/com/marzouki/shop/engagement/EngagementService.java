@@ -76,7 +76,9 @@ public class EngagementService {
     }
 
     public List<WishlistItem> wishlistOf(Long userId) {
-        return wishlist.findByUserIdOrderByCreatedAtDescIdDesc(userId);
+        List<WishlistItem> items = wishlist.findByUserIdOrderByCreatedAtDescIdDesc(userId);
+        com.marzouki.shop.catalog.ProductViews.warm(items.stream().map(WishlistItem::getProduct).toList());
+        return items;
     }
 
     /** Adds the product if missing, removes it otherwise. Returns true when it is now on the list. */

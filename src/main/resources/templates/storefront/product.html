@@ -18,27 +18,40 @@
         <div class="col-md-7">
             <span class="text-secondary text-uppercase small" th:text="${product.subcategory.category.title + ' · ' + product.subcategory.title}">Category</span>
             <h1 class="h2 mt-1" th:text="${product.name}">Product</h1>
-            <p class="price fs-3 my-3" th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</p>
+            <p class="price fs-3 my-3" id="price" th:text="${page.initialPrice}">0.00 €</p>
             <p th:text="${product.description}" th:if="${product.description != null}">Description</p>
-            <p class="mb-4">
+            <div id="options" class="mb-3" th:if="${page.optioned}">
+                <div class="opt-group mb-3" th:each="g : ${page.groups}" th:attr="data-type=${g.typeId}">
+                    <div class="fw-semibold mb-2"><span th:text="${g.name}">Size</span>: <span class="text-secondary fw-normal" data-selected-label>Choose</span></div>
+                    <label class="opt" th:each="c : ${g.choices}" th:classappend="${g.color} ? 'opt-color'">
+                        <input type="radio" th:name="'opt-' + ${g.typeId}" th:value="${c.id}">
+                        <span class="opt-face">
+                            <span class="swatch" th:if="${g.color}" th:attr="data-color=${c.hex},title=${c.label}"></span>
+                            <span th:unless="${g.color}" th:text="${c.label}">M</span>
+                        </span>
+                        <span class="visually-hidden" th:if="${g.color}" th:text="${c.label}">Black</span>
+                    </label>
+                </div>
+            </div>
+            <p class="mb-4" id="stock">
                 <span class="badge text-bg-success" th:if="${product.stock > 5}"><i class="bi bi-check-circle"></i> In stock</span>
                 <span class="badge text-bg-warning" th:if="${product.stock > 0 and product.stock <= 5}">Only <span th:text="${product.stock}">3</span> left</span>
                 <span class="badge text-bg-danger" th:if="${product.stock == 0}">Sold out</span>
             </p>
-            <form class="d-flex gap-2 align-items-center mb-3" th:if="${product.stock > 0}" th:action="@{/cart/add}" method="post">
-                <input type="hidden" name="productId" th:value="${product.id}">
+            <form class="d-flex gap-2 align-items-center mb-3" th:if="${page.initialVariantId != null}" th:action="@{/cart/add}" method="post">
+                <input type="hidden" name="variantId" id="variant-id" th:value="${page.initialVariantId}">
                 <label class="visually-hidden" for="quantity">Quantity</label>
                 <input class="form-control qty-input" id="quantity" name="quantity" type="number" min="1" th:max="${product.stock < 20 ? product.stock : 20}" value="1">
-                <button class="btn btn-primary" type="submit"><i class="bi bi-cart-plus"></i> Add to cart</button>
-            </form>
-            <div class="mb-3">
+                <button class="btn btn-primary" id="add-to-cart" type="submit" th:disabled="${product.stock == 0}"><i class="bi bi-cart-plus"></i> Add to cart</button>
+            </form>            <div class="mb-3">
                 <form class="d-inline" sec:authorize="isAuthenticated()" th:action="@{/wishlist/toggle}" method="post" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
                     <input type="hidden" name="productId" th:value="${product.id}">
                     <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi" th:classappend="${wished} ? 'bi-heart-fill text-danger' : 'bi-heart'"></i> <span th:text="${wished} ? 'On your wishlist' : 'Add to wishlist'">Wishlist</span></button>
                 </form>
                 <a class="btn btn-outline-secondary btn-sm" sec:authorize="!isAuthenticated()" th:href="@{/login}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"><i class="bi bi-heart"></i> Sign in to save</a>
             </div>
-            <p class="text-secondary small">SKU <code th:text="${product.sku}">SKU</code></p>
+            <p class="text-secondary small">SKU <code id="sku" th:text="${page.optioned} ? ${product.sku} : ${product.sku}">SKU</code></p>
+            <script type="application/json" id="variant-data" th:attr="data-initial=${page.initialVariantId}" th:utext="${page.variantsJson}" th:if="${page.optioned}"></script>
         </div>
     </div>
     <section class="mt-5" id="reviews">
@@ -85,5 +98,6 @@
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/product.js}" th:if="${page.optioned}"></script>
 </body>
 </html>

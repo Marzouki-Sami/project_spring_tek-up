@@ -24,6 +24,7 @@ public class ProductController {
     private final ProductService products;
     private final SubcategoryService subcategories;
     private final SupplierService suppliers;
+    private final com.marzouki.shop.catalog.ProductTypeService productTypes;
 
     @GetMapping
     public String list(Model model) {
@@ -42,13 +43,15 @@ public class ProductController {
         if (result.hasErrors()) {
             return show(model, form, "/manage/products", "New product");
         }
-        products.create(form);
+        com.marzouki.shop.catalog.Product created = products.create(form);
         flash.addFlashAttribute("success", "Product created");
-        return "redirect:/manage/products";
+        return created.isOptioned() ? "redirect:/manage/products/" + created.getId() + "/variants"
+                : "redirect:/manage/products";
     }
 
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
+        model.addAttribute("existing", products.get(id));
         return show(model, products.formFor(id), "/manage/products/" + id, "Edit product");
     }
 
@@ -58,7 +61,12 @@ public class ProductController {
         if (result.hasErrors()) {
             return show(model, form, "/manage/products/" + id, "Edit product");
         }
-        products.update(id, form);
+        try {
+            products.update(id, form);
+        } catch (com.marzouki.shop.common.ConflictException e) {
+            result.reject("conflict", e.getMessage());
+            return show(model, form, "/manage/products/" + id, "Edit product");
+        }
         flash.addFlashAttribute("success", "Product saved");
         return "redirect:/manage/products";
     }
@@ -76,6 +84,8 @@ public class ProductController {
         model.addAttribute("heading", heading);
         model.addAttribute("subcategories", subcategories.findAll());
         model.addAttribute("suppliers", suppliers.findAll());
+        model.addAttribute("productTypes", productTypes.findAll());
+        model.addAttribute("creating", action.equals("/manage/products"));
         return "product/form";
     }
 }

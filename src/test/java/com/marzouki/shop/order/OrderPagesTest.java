@@ -74,19 +74,19 @@ class OrderPagesTest {
         lamp.setSku("L-1");
         lamp.setName("Lamp");
         lamp.setPrice(new BigDecimal("20.00"));
-        lamp.setStock(5);
+        lamp.addVariant("L-1", 5);
         lamp.setSubcategory(sub);
         products.save(lamp);
         User customer = users.create("Cy", "Customer", "cy@example.com", TestPasswords.strong(), Role.CUSTOMER);
         User manager = users.create("Mo", "Manager", "mo@example.com", TestPasswords.strong(), Role.MANAGER);
 
         MockHttpSession session = new MockHttpSession();
-        mvc.perform(post("/cart/add").session(session).with(csrf()).param("productId", lamp.getId().toString()));
+        mvc.perform(post("/cart/add").session(session).with(csrf()).param("variantId", lamp.getDefaultVariant().getId().toString()));
         mvc.perform(get("/cart").session(session)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Lamp")));
 
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 1);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 1);
         ShippingForm address = new ShippingForm();
         address.setFullName("Cy Customer");
         address.setAddress("1 Main Street");

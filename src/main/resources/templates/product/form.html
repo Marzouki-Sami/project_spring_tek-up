@@ -6,6 +6,7 @@
 <main class="container narrow">
     <h1 class="h3 mb-4" th:text="${heading}"></h1>
     <form th:action="${action}" th:object="${form}" method="post" novalidate>
+        <div class="alert alert-danger" role="alert" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
         <div class="mb-3">
             <label class="form-label" for="sku">SKU</label>
             <input class="form-control" th:classappend="${#fields.hasErrors('sku')} ? 'is-invalid'" type="text" id="sku" th:field="*{sku}">
@@ -27,11 +28,24 @@
             <div class="invalid-feedback" th:errors="*{price}"></div>
         </div>
         <div class="mb-3">
-            <label class="form-label" for="stock">Stock</label>
+            <label class="form-label" for="productTypeId">Product type</label>
+            <select class="form-select" id="productTypeId" th:field="*{productTypeId}">
+                <option value="">None (a single item, no sizes or colours)</option>
+                <option th:each="t : ${productTypes}" th:value="${t.id}" th:text="${t.name}"></option>
+            </select>
+            <div class="form-text">Products with a type are sold in variants such as size and colour. Changing the type later resets the variants.</div>
+        </div>
+        <div class="mb-3" th:if="${creating}">
+            <label class="form-label" for="stock">Starting stock</label>
             <input class="form-control" th:classappend="${#fields.hasErrors('stock')} ? 'is-invalid'" type="number" id="stock" th:field="*{stock}" step="1" min="0">
             <div class="invalid-feedback" th:errors="*{stock}"></div>
+            <div class="form-text">Only for products without a type. Variants get their stock on the variants page.</div>
         </div>
-        <div class="mb-3">
+        <p class="text-secondary" th:unless="${creating}">
+            <i class="bi bi-box-seam"></i>
+            <a th:if="${existing != null and existing.optioned}" th:href="@{/manage/products/{id}/variants(id=${existing.id})}">Manage variants and stock</a>
+            <a th:if="${existing != null and !existing.optioned and existing.defaultVariant != null}" th:href="@{/manage/variants/{id}/stock(id=${existing.defaultVariant.id})}">Adjust stock and see its history</a>
+        </p><div class="mb-3">
             <label class="form-label" for="subcategoryId">Subcategory</label>
             <select class="form-select" th:classappend="${#fields.hasErrors('subcategoryId')} ? 'is-invalid'" id="subcategoryId" th:field="*{subcategoryId}">
                 <option value="">Choose...</option>

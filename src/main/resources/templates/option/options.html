@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Options')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('options')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <h1 class="h3 mb-1">Options</h1>
+    <p class="text-secondary mb-4">Choices a product can come in, such as Size or Color. Group them into <a th:href="@{/manage/product-types}">product types</a> to decide which products get which options.</p>
+    <form class="panel mb-4" th:action="@{/manage/options}" th:object="${form}" method="post" novalidate>
+        <h2 class="h6 mb-3">New option</h2>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label" for="name">Name</label>
+                <input class="form-control" id="name" th:field="*{name}" th:errorclass="is-invalid" placeholder="Size">
+                <div class="invalid-feedback" th:errors="*{name}"></div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="display">Shown as</label>
+                <select class="form-select" id="display" th:field="*{display}">
+                    <option value="TEXT">Buttons with text</option>
+                    <option value="COLOR">Colour swatches</option>
+                </select>
+            </div>
+            <div class="col-md-3"><button class="btn btn-primary w-100" type="submit">Create</button></div>
+        </div>
+    </form>
+    <p class="empty" th:if="${#lists.isEmpty(optionTypes)}">No options yet.</p>
+    <div class="panel mb-3" th:each="type : ${optionTypes}">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0"><span th:text="${type.name}">Size</span>
+                <span class="badge text-bg-light border ms-1" th:text="${type.display.name() == 'COLOR'} ? 'Swatches' : 'Buttons'">Buttons</span></h2>
+            <form th:action="@{/manage/options/{id}/delete(id=${type.id})}" method="post" data-confirm="Delete this option and its values?">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+            </form>
+        </div>
+        <div class="mb-3">
+            <span class="value-chip" th:each="v : ${type.values}">
+                <span class="swatch" th:if="${v.colorHex != null}" th:attr="data-color=${v.colorHex}"></span>
+                <span th:text="${v.label}">M</span>
+                <form class="d-inline" th:action="@{/manage/options/values/{id}/delete(id=${v.id})}" method="post">
+                    <button class="chip-remove" type="submit" th:attr="aria-label='Remove ' + ${v.label}">&times;</button>
+                </form>
+            </span>
+            <span class="text-secondary" th:if="${#lists.isEmpty(type.values)}">No values yet.</span>
+        </div>
+        <form class="row g-2 align-items-center" th:action="@{/manage/options/{id}/values(id=${type.id})}" method="post">
+            <div class="col-auto"><input class="form-control form-control-sm" name="label" placeholder="New value" aria-label="New value" required></div>
+            <div class="col-auto" th:if="${type.display.name() == 'COLOR'}"><input class="form-control form-control-sm form-control-color" type="color" name="colorHex" value="#888888" aria-label="Colour"></div>
+            <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit">Add value</button></div>
+        </form>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

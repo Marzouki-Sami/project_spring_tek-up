@@ -14,3 +14,8 @@ document.addEventListener('click', function (event) {
     document.documentElement.setAttribute('data-bs-theme', next);
     try { localStorage.setItem('theme', next); } catch (e) { /* storage unavailable */ }
 });
+// Colour swatches: the colour comes from a data attribute and is applied here, because the
+// Content-Security-Policy forbids inline style attributes in the markup.
+document.querySelectorAll('[data-color]').forEach(function (element) {
+    element.style.backgroundColor = element.getAttribute('data-color');
+});

@@ -32,11 +32,15 @@ public interface CatalogMapper {
 
     @Mapping(target = "subcategoryId", source = "subcategory.id")
     @Mapping(target = "supplierId", source = "supplier.id")
+    @Mapping(target = "productTypeId", source = "productType.id")
+    @Mapping(target = "stock", ignore = true)
     ProductForm toForm(Product product);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "subcategory", ignore = true)
     @Mapping(target = "supplier", ignore = true)
+    @Mapping(target = "productType", ignore = true)
+    @Mapping(target = "variants", ignore = true)
     void apply(ProductForm form, @MappingTarget Product product);
 }

@@ -1,7 +1,7 @@
 package com.marzouki.shop.cart;
 
-import com.marzouki.shop.catalog.Product;
-import com.marzouki.shop.catalog.ProductRepository;
+import com.marzouki.shop.catalog.ProductVariant;
+import com.marzouki.shop.catalog.ProductVariantRepository;
 import com.marzouki.shop.common.ConflictException;
 import com.marzouki.shop.order.Coupon;
 import com.marzouki.shop.order.CouponRepository;
@@ -22,31 +22,31 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class CartService {
 
-    private final ProductRepository products;
+    private final ProductVariantRepository variants;
     private final CouponRepository coupons;
 
     /** Adds to the basket, never beyond the stock on hand or the per-line limit. */
-    public void add(Cart cart, Long productId, int quantity) {
-        Product product = products.findByIdAndActiveTrue(productId)
+    public void add(Cart cart, Long variantId, int quantity) {
+        ProductVariant variant = variants.findPurchasableById(variantId)
                 .orElseThrow(() -> new ConflictException("This product is no longer available"));
-        if (product.getStock() == 0) {
-            throw new ConflictException(product.getName() + " is sold out");
+        if (variant.getStock() == 0) {
+            throw new ConflictException(describe(variant) + " is sold out");
         }
-        int wanted = cart.quantityOf(productId) + Math.max(quantity, 1);
-        cart.set(productId, Math.min(wanted, Math.min(product.getStock(), Cart.MAX_PER_LINE)));
+        int wanted = cart.quantityOf(variantId) + Math.max(quantity, 1);
+        cart.set(variantId, Math.min(wanted, Math.min(variant.getStock(), Cart.MAX_PER_LINE)));
     }
 
-    public void setQuantity(Cart cart, Long productId, int quantity) {
+    public void setQuantity(Cart cart, Long variantId, int quantity) {
         if (quantity <= 0) {
-            cart.remove(productId);
+            cart.remove(variantId);
             return;
         }
-        Product product = products.findByIdAndActiveTrue(productId).orElse(null);
-        if (product == null) {
-            cart.remove(productId);
+        ProductVariant variant = variants.findPurchasableById(variantId).orElse(null);
+        if (variant == null) {
+            cart.remove(variantId);
             return;
         }
-        cart.set(productId, Math.min(quantity, Math.min(product.getStock(), Cart.MAX_PER_LINE)));
+        cart.set(variantId, Math.min(quantity, Math.min(variant.getStock(), Cart.MAX_PER_LINE)));
     }
 
     @Transactional
@@ -63,24 +63,25 @@ public class CartService {
     /** Prices the basket with today's data: removed products vanish, quantities shrink to the stock. */
     public CartView view(Cart cart) {
         Map<Long, Integer> wanted = cart.snapshot();
-        Map<Long, Product> found = products.findByIdIn(wanted.keySet()).stream()
-                .filter(Product::isActive)
-                .collect(Collectors.toMap(Product::getId, Function.identity()));
+        Map<Long, ProductVariant> found = wanted.isEmpty() ? Map.of()
+                : variants.findPurchasable(wanted.keySet()).stream()
+                        .collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
 
         List<CartView.Line> lines = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
         for (Map.Entry<Long, Integer> entry : wanted.entrySet()) {
-            Product product = found.get(entry.getKey());
-            if (product == null || product.getStock() == 0) {
+            ProductVariant variant = found.get(entry.getKey());
+            if (variant == null || variant.getStock() == 0) {
                 cart.remove(entry.getKey());
                 continue;
             }
-            int quantity = Math.min(entry.getValue(), product.getStock());
+            int quantity = Math.min(entry.getValue(), variant.getStock());
             if (quantity != entry.getValue()) {
                 cart.set(entry.getKey(), quantity);
             }
-            BigDecimal lineTotal = product.getPrice().multiply(BigDecimal.valueOf(quantity));
-            lines.add(new CartView.Line(product, quantity, lineTotal, quantity < entry.getValue()));
+            BigDecimal unit = variant.getEffectivePrice();
+            BigDecimal lineTotal = unit.multiply(BigDecimal.valueOf(quantity));
+            lines.add(new CartView.Line(variant, quantity, unit, lineTotal, quantity < entry.getValue()));
             subtotal = subtotal.add(lineTotal);
         }
 
@@ -93,5 +94,10 @@ public class CartService {
         BigDecimal discount = coupon == null ? BigDecimal.ZERO : Pricing.discount(subtotal, coupon.getPercentOff());
         return new CartView(lines, subtotal, discount, subtotal.subtract(discount),
                 coupon == null ? null : coupon.getCode(), coupon == null ? null : coupon.getPercentOff());
+    }
+
+    private static String describe(ProductVariant variant) {
+        String label = variant.getLabel();
+        return variant.getProduct().getName() + (label == null ? "" : " (" + label + ")");
     }
 }

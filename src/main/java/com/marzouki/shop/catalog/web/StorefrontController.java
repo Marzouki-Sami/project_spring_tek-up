@@ -1,6 +1,8 @@
 package com.marzouki.shop.catalog.web;
 
 import com.marzouki.shop.catalog.CategoryRepository;
+import com.marzouki.shop.catalog.Product;
+import com.marzouki.shop.catalog.ProductViews;
 import com.marzouki.shop.catalog.ProductRepository;
 import com.marzouki.shop.common.NotFoundException;
 import com.marzouki.shop.engagement.EngagementService;
@@ -28,11 +30,14 @@ public class StorefrontController {
     private final ProductRepository products;
     private final CategoryRepository categories;
     private final EngagementService engagement;
+    private final com.fasterxml.jackson.databind.ObjectMapper json;
 
     @GetMapping("/")
     @Transactional(readOnly = true)
     public String home(Model model) {
-        model.addAttribute("latest", products.findTop8ByActiveTrueOrderByCreatedAtDescIdDesc());
+        java.util.List<Product> latest = products.findTop8ByActiveTrueOrderByCreatedAtDescIdDesc();
+        ProductViews.warm(latest);
+        model.addAttribute("latest", latest);
         model.addAttribute("categories", categories.findAllByOrderByTitleAsc());
         return "storefront/home";
     }
@@ -51,7 +56,8 @@ public class StorefrontController {
             default -> Sort.by("name").ascending();
         };
         String text = q.trim();
-        Page<?> result = products.search(text, category, PageRequest.of(Math.max(page, 0), PAGE_SIZE, order));
+        Page<Product> result = products.search(text, category, PageRequest.of(Math.max(page, 0), PAGE_SIZE, order));
+        result.forEach(p -> ProductViews.warm(java.util.List.of(p)));
         model.addAttribute("page", result);
         model.addAttribute("q", text);
         model.addAttribute("selectedCategory", category);
@@ -63,8 +69,9 @@ public class StorefrontController {
     @GetMapping("/products/{id}")
     @Transactional(readOnly = true)
     public String detail(@PathVariable Long id, @AuthenticationPrincipal AppUserDetails me, Model model) {
-        model.addAttribute("product", products.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new NotFoundException("Product", id)));
+        Product product = products.findByIdAndActiveTrue(id).orElseThrow(() -> new NotFoundException("Product", id));
+        model.addAttribute("product", product);
+        model.addAttribute("page", ProductPage.of(product, json));
         model.addAttribute("reviews", engagement.reviewsFor(id));
         model.addAttribute("average", engagement.averageRating(id));
         model.addAttribute("reviewForm", new ReviewForm());

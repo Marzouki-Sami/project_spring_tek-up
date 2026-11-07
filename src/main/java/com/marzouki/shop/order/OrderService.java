@@ -3,7 +3,8 @@ package com.marzouki.shop.order;
 import com.marzouki.shop.cart.Cart;
 import com.marzouki.shop.cart.CartService;
 import com.marzouki.shop.cart.CartView;
-import com.marzouki.shop.catalog.ProductRepository;
+import com.marzouki.shop.catalog.ProductVariant;
+import com.marzouki.shop.catalog.ProductVariantRepository;
 import com.marzouki.shop.common.ConflictException;
 import com.marzouki.shop.common.NotFoundException;
 import com.marzouki.shop.order.dto.ShippingForm;
@@ -23,7 +24,7 @@ public class OrderService {
     public static final int LOW_STOCK_LEVEL = 5;
 
     private final OrderRepository orders;
-    private final ProductRepository products;
+    private final ProductVariantRepository variantRepository;
     private final CouponRepository coupons;
     private final StockMovementRepository movements;
     private final UserRepository users;
@@ -68,27 +69,29 @@ public class OrderService {
         order.setTotal(view.total());
 
         for (CartView.Line line : view.lines()) {
-            if (products.takeStock(line.product().getId(), line.quantity()) == 0) {
+            ProductVariant variant = line.variant();
+            if (variantRepository.takeStock(variant.getId(), line.quantity()) == 0) {
                 throw new ConflictException("Sorry, " + line.product().getName() + " just went out of stock");
             }
-            int before = line.product().getStock();
+            int before = variant.getStock();
             if (before > LOW_STOCK_LEVEL && before - line.quantity() <= LOW_STOCK_LEVEL) {
-                events.publishEvent(new OrderEvents.LowStock(line.product().getId()));
+                events.publishEvent(new OrderEvents.LowStock(variant.getId()));
             }
             OrderItem item = new OrderItem();
             item.setProduct(line.product());
-            item.setSku(line.product().getSku());
+            item.setVariant(variant);
+            item.setVariantLabel(variant.getLabel());
+            item.setSku(variant.getSku());
             item.setName(line.product().getName());
-            item.setUnitPrice(line.product().getPrice());
+            item.setUnitPrice(line.unitPrice());
             item.setQuantity(line.quantity());
             order.addItem(item);
         }
         orders.save(order);
         for (OrderItem item : order.getItems()) {
-            movements.save(new StockMovement(item.getProduct().getId(), -item.getQuantity(),
-                    StockMovement.Reason.ORDER, order.getId()));
-        }
-        events.publishEvent(new OrderEvents.OrderPlaced(order.getId()));
+            movements.save(new StockMovement(item.getProduct().getId(), item.getVariant().getId(),
+                    -item.getQuantity(), StockMovement.Reason.ORDER, order.getId()));
+        }        events.publishEvent(new OrderEvents.OrderPlaced(order.getId()));
         return order;
     }
 
@@ -138,13 +141,13 @@ public class OrderService {
         }
         if (target == OrderStatus.CANCELLED) {
             for (OrderItem item : order.getItems()) {
-                if (item.getProduct() != null) {
-                    products.returnStock(item.getProduct().getId(), item.getQuantity());
-                    movements.save(new StockMovement(item.getProduct().getId(), item.getQuantity(),
-                            StockMovement.Reason.CANCELLATION, order.getId()));
+                if (item.getVariant() != null) {
+                    variantRepository.returnStock(item.getVariant().getId(), item.getQuantity());
+                    movements.save(new StockMovement(item.getProduct() == null ? null : item.getProduct().getId(),
+                            item.getVariant().getId(), item.getQuantity(), StockMovement.Reason.CANCELLATION,
+                            order.getId()));
                 }
-            }
-            if (order.getCouponCode() != null) {
+            }            if (order.getCouponCode() != null) {
                 coupons.findByCodeIgnoreCase(order.getCouponCode()).ifPresent(c -> coupons.releaseUse(c.getId()));
             }
         }
