@@ -55,6 +55,13 @@ public class Product {
     @OrderBy("position, id")
     private List<ProductVariant> variants = new ArrayList<>();
 
+    /** Products a manager chose to suggest alongside this one, in order. */
+    @ManyToMany
+    @JoinTable(name = "related_products", joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "related_id"))
+    @OrderColumn(name = "position")
+    private List<Product> related = new ArrayList<>();
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position, id")
     private List<com.marzouki.shop.media.ProductImage> images = new ArrayList<>();

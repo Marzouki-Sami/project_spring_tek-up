@@ -60,6 +60,10 @@ public class User {
     @Column(name = "totp_last_step")
     private Long totpLastStep;
 
+    /** Customers can switch off emails about items in their basket or wishlist coming back in stock. */
+    @Column(name = "back_in_stock_alerts", nullable = false)
+    private boolean backInStockAlerts = true;
+
     /** Managers and admins can switch low-stock emails off. */
     @Column(name = "low_stock_alerts", nullable = false)
     private boolean lowStockAlerts = true;

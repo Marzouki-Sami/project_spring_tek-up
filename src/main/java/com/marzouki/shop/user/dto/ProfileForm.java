@@ -22,6 +22,8 @@ public class ProfileForm {
     @Pattern(regexp = "[0-9+()\\-. ]*", message = "Use digits, spaces and + ( ) - . only")
     private String phone;
 
+    private boolean backInStockAlerts = true;
+
     /** Only shown to managers and admins. */
     private boolean lowStockAlerts = true;
 }

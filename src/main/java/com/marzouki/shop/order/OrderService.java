@@ -147,7 +147,11 @@ public class OrderService {
         if (target == OrderStatus.CANCELLED) {
             for (OrderItem item : order.getItems()) {
                 if (item.getVariant() != null) {
+                    boolean wasSoldOut = item.getVariant().getStock() == 0;
                     variantRepository.returnStock(item.getVariant().getId(), item.getQuantity());
+                    if (wasSoldOut) {
+                        events.publishEvent(new OrderEvents.BackInStock(item.getVariant().getId()));
+                    }
                     movements.save(new StockMovement(item.getProduct() == null ? null : item.getProduct().getId(),
                             item.getVariant().getId(), item.getQuantity(), StockMovement.Reason.CANCELLATION,
                             order.getId()));

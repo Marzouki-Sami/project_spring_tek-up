@@ -23,4 +23,13 @@ public interface UserRepository extends JpaRepository<User, Long>,
     java.util.List<User> findByRoleInAndEnabledTrue(java.util.Collection<Role> roles);
 
     java.util.List<User> findByRoleInAndEnabledTrueAndLowStockAlertsTrue(java.util.Collection<Role> roles);
+
+    /** People who asked to hear about this item: it is in their saved basket, or its product is on their wishlist. */
+    @org.springframework.data.jpa.repository.Query("""
+            select u from User u where u.enabled = true and u.backInStockAlerts = true and (
+              exists (select 1 from SavedCart c join c.quantities q where c.user = u and key(q) = :variantId)
+              or exists (select 1 from WishlistItem w where w.user = u and w.product.id = :productId))
+            """)
+    java.util.List<User> backInStockAudience(@org.springframework.data.repository.query.Param("variantId") Long variantId,
+            @org.springframework.data.repository.query.Param("productId") Long productId);
 }
