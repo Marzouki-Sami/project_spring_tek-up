@@ -23,7 +23,7 @@
                     <thead><tr><th>Item</th><th class="num">Price</th><th class="num">Qty</th><th class="num">Total</th></tr></thead>
                     <tbody>
                         <tr th:each="i : ${order.items}">
-                            <td><span th:text="${i.name}">Name</span> <code class="text-secondary" th:text="${i.sku}">SKU</code></td>
+                            <td><span th:text="${i.name}">Name</span> <span class="text-secondary" th:if="${i.variantLabel != null}" th:text="'('+ ${i.variantLabel} + ')'"></span> <code class="text-secondary" th:text="${i.sku}">SKU</code></td>
                             <td class="num" th:text="${#numbers.formatDecimal(i.unitPrice, 1, 'COMMA', 2, 'POINT')} + ' €'">0</td>
                             <td class="num" th:text="${i.quantity}">1</td>
                             <td class="num" th:text="${#numbers.formatDecimal(i.lineTotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0</td>

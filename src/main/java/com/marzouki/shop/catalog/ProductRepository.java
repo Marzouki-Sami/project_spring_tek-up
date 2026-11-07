@@ -12,10 +12,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    @EntityGraph(attributePaths = {"subcategory", "subcategory.category", "supplier"})
+    @EntityGraph(attributePaths = {"subcategory", "subcategory.category", "supplier", "productType"})
     List<Product> findAllByOrderByNameAsc();
 
-    @EntityGraph(attributePaths = {"subcategory", "subcategory.category", "supplier"})
+    @EntityGraph(attributePaths = {"subcategory", "subcategory.category", "supplier", "productType"})
     Optional<Product> findWithDetailsById(Long id);
 
     /** Storefront search: active products only, optionally narrowed by text and category. */
@@ -34,21 +34,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths = {"subcategory", "subcategory.category"})
     Optional<Product> findByIdAndActiveTrue(Long id);
 
-    /** Takes stock only if enough is left, in one atomic statement so two buyers can never oversell. */
-    @Modifying(flushAutomatically = true)
-    @Query("update Product p set p.stock = p.stock - :quantity where p.id = :id and p.active = true and p.stock >= :quantity")
-    int takeStock(@Param("id") Long id, @Param("quantity") int quantity);
-
-    @Modifying(flushAutomatically = true)
-    @Query("update Product p set p.stock = p.stock + :quantity where p.id = :id")
-    int returnStock(@Param("id") Long id, @Param("quantity") int quantity);
-
     @EntityGraph(attributePaths = {"subcategory", "subcategory.category"})
     List<Product> findByIdIn(java.util.Collection<Long> ids);
 
-    List<Product> findTop10ByActiveTrueAndStockLessThanEqualOrderByStockAscNameAsc(int stock);
-
     long countByActiveTrue();
+
+    boolean existsByProductTypeId(Long productTypeId);
 
     boolean existsBySkuIgnoreCase(String sku);
 

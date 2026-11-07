@@ -36,9 +36,9 @@
             <div class="panel">
                 <h2 class="h6 mb-3">Running low</h2>
                 <p class="text-secondary mb-0" th:if="${#lists.isEmpty(overview.lowStock)}">All products are well stocked.</p>
-                <a class="status-row" th:each="p : ${overview.lowStock}" th:href="@{/manage/products/{id}/edit(id=${p.id})}">
-                    <span th:text="${p.name}">Product</span>
-                    <span class="badge" th:classappend="${p.stock == 0} ? 'text-bg-danger' : 'text-bg-warning'" th:text="${p.stock == 0} ? 'Sold out' : ${p.stock} + ' left'">3</span>
+                <a class="status-row" th:each="v : ${overview.lowStock}" th:href="@{/manage/variants/{id}/stock(id=${v.id})}">
+                    <span><span th:text="${v.product.name}">Product</span><span class="text-secondary small" th:if="${v.label != null}" th:text="' · ' + ${v.shortLabel}"></span></span>
+                    <span class="badge" th:classappend="${v.stock == 0} ? 'text-bg-danger' : 'text-bg-warning'" th:text="${v.stock == 0} ? 'Sold out' : ${v.stock} + ' left'">3</span>
                 </a>
             </div>
         </div>

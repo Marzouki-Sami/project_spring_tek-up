@@ -1,6 +1,7 @@
 package com.marzouki.shop.cart;
 
 import com.marzouki.shop.catalog.Product;
+import com.marzouki.shop.catalog.ProductVariant;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -8,7 +9,12 @@ import java.util.List;
 public record CartView(List<Line> lines, BigDecimal subtotal, BigDecimal discount, BigDecimal total,
                        String couponCode, Integer percentOff) {
 
-    public record Line(Product product, int quantity, BigDecimal lineTotal, boolean limited) {
+    public record Line(ProductVariant variant, int quantity, BigDecimal unitPrice, BigDecimal lineTotal,
+                       boolean limited) {
+
+        public Product product() {
+            return variant.getProduct();
+        }
     }
 
     public boolean isEmpty() {

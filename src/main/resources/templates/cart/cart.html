@@ -17,18 +17,19 @@
                     <div class="cart-thumb" th:classappend="'art-' + ${line.product.subcategory.category.id % 6}"><i class="bi bi-bag-heart"></i></div>
                     <div class="cart-info">
                         <a class="fw-semibold text-decoration-none" th:href="@{/products/{id}(id=${line.product.id})}" th:text="${line.product.name}">Product</a>
-                        <div class="text-secondary small" th:text="${#numbers.formatDecimal(line.product.price, 1, 'COMMA', 2, 'POINT')} + ' € each'">0 €</div>
+                        <div class="text-secondary small" th:if="${line.variant.label != null}" th:text="${line.variant.label}">Size: M</div>
+                        <div class="text-secondary small" th:text="${#numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT')} + ' € each'">0 €</div>
                         <div class="text-warning-emphasis small" th:if="${line.limited}">Reduced to the quantity in stock</div>
                     </div>
                     <form class="cart-qty" th:action="@{/cart/update}" method="post">
-                        <input type="hidden" name="productId" th:value="${line.product.id}">
-                        <label class="visually-hidden" th:for="'q' + ${line.product.id}">Quantity</label>
-                        <input class="form-control form-control-sm qty-input" th:id="'q' + ${line.product.id}" name="quantity" type="number" min="0" max="20" th:value="${line.quantity}">
+                        <input type="hidden" name="variantId" th:value="${line.variant.id}">
+                        <label class="visually-hidden" th:for="'q' + ${line.variant.id}">Quantity</label>
+                        <input class="form-control form-control-sm qty-input" th:id="'q' + ${line.variant.id}" name="quantity" type="number" min="0" max="20" th:value="${line.quantity}">
                         <button class="btn btn-sm btn-outline-secondary" type="submit">Update</button>
                     </form>
                     <div class="cart-total num fw-semibold" th:text="${#numbers.formatDecimal(line.lineTotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0 €</div>
                     <form th:action="@{/cart/remove}" method="post">
-                        <input type="hidden" name="productId" th:value="${line.product.id}">
+                        <input type="hidden" name="variantId" th:value="${line.variant.id}">
                         <button class="btn btn-sm btn-link text-danger" type="submit" aria-label="Remove"><i class="bi bi-trash"></i></button>
                     </form>
                 </div>

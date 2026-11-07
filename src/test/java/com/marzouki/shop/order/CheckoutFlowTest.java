@@ -61,7 +61,7 @@ class CheckoutFlowTest {
         lamp.setSku("L-1");
         lamp.setName("Lamp");
         lamp.setPrice(new BigDecimal("20.00"));
-        lamp.setStock(5);
+        lamp.addVariant("L-1", 5);
         lamp.setSubcategory(sub);
         products.save(lamp);
         customer = users.create("Cy", "Customer", "cy@example.com", TestPasswords.strong(), Role.CUSTOMER);
@@ -70,7 +70,7 @@ class CheckoutFlowTest {
     @Test
     void guestsCanFillTheCartButCheckoutAsksThemToSignIn() throws Exception {
         MockHttpSession session = new MockHttpSession();
-        mvc.perform(post("/cart/add").session(session).with(csrf()).param("productId", lamp.getId().toString()))
+        mvc.perform(post("/cart/add").session(session).with(csrf()).param("variantId", lamp.getDefaultVariant().getId().toString()))
                 .andExpect(redirectedUrl("/cart"));
         mvc.perform(get("/cart").session(session)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Lamp")));
@@ -89,7 +89,7 @@ class CheckoutFlowTest {
     void aSignedInCustomerCanCheckOutAndSeeTheOrder() throws Exception {
         MockHttpSession session = new MockHttpSession();
         var me = user(new AppUserDetails(customer));
-        mvc.perform(post("/cart/add").session(session).with(csrf()).param("productId", lamp.getId().toString())
+        mvc.perform(post("/cart/add").session(session).with(csrf()).param("variantId", lamp.getDefaultVariant().getId().toString())
                 .param("quantity", "2"));
 
         mvc.perform(post("/checkout").session(session).with(me).with(csrf())
@@ -107,7 +107,7 @@ class CheckoutFlowTest {
     @Test
     void checkoutRejectsAnIncompleteAddress() throws Exception {
         MockHttpSession session = new MockHttpSession();
-        mvc.perform(post("/cart/add").session(session).with(csrf()).param("productId", lamp.getId().toString()));
+        mvc.perform(post("/cart/add").session(session).with(csrf()).param("variantId", lamp.getDefaultVariant().getId().toString()));
         mvc.perform(post("/checkout").session(session).with(user(new AppUserDetails(customer))).with(csrf())
                         .param("fullName", " "))
                 .andExpect(status().isOk())

@@ -27,8 +27,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("select o.status, count(o) from Order o group by o.status")
     List<Object[]> countByStatus();
 
-    @Query("select i.sku, i.name, sum(i.quantity) from OrderItem i where i.order.status <> com.marzouki.shop.order.OrderStatus.CANCELLED "
-            + "group by i.sku, i.name order by sum(i.quantity) desc")
+    @Query("select max(i.sku), i.name, sum(i.quantity) from OrderItem i where i.order.status <> com.marzouki.shop.order.OrderStatus.CANCELLED "
+            + "group by i.name order by sum(i.quantity) desc")
     List<Object[]> topSellers(org.springframework.data.domain.Pageable limit);
 
     @EntityGraph(attributePaths = {"items", "user"})

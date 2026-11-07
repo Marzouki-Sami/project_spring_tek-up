@@ -32,6 +32,7 @@ public class ProductForm {
     @Digits(integer = 8, fraction = 2, message = "Use at most 2 decimals")
     private BigDecimal price;
 
+    /** Starting stock when the product is created. Later changes go through stock adjustments. */
     @Min(value = 0, message = "Stock cannot be negative")
     private int stock;
 
@@ -41,4 +42,7 @@ public class ProductForm {
     private Long subcategoryId;
 
     private Long supplierId;
+
+    /** Optional. Products with a type are sold in variants (sizes, colours); others have a single stock count. */
+    private Long productTypeId;
 }

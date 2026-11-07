@@ -1,6 +1,7 @@
 package com.marzouki.shop.mail;
 
 import com.marzouki.shop.catalog.Product;
+import com.marzouki.shop.catalog.ProductVariant;
 import com.marzouki.shop.order.Order;
 import com.marzouki.shop.user.User;
 import java.util.Locale;
@@ -51,14 +52,14 @@ public class MailComposer {
                         + " has shipped to " + order.getCity() + ".\nDetails: " + link);
     }
 
-    public Email lowStock(String to, Product product) {
-        String link = properties.baseUrl() + "/manage/products/" + product.getId() + "/edit";
-        return build(to, "Low stock: " + product.getName(), "low-stock",
-                Map.of("product", product, "link", link),
-                product.getName() + " (" + product.getSku() + ") is down to " + product.getStock()
-                        + " units.\nRestock: " + link);
+    public Email lowStock(String to, ProductVariant variant) {
+        Product product = variant.getProduct();
+        String link = properties.baseUrl() + "/manage/variants/" + variant.getId() + "/stock";
+        String name = variant.getLabel() == null ? product.getName() : product.getName() + " (" + variant.getLabel() + ")";
+        return build(to, "Low stock: " + name, "low-stock",
+                Map.of("name", name, "sku", variant.getSku(), "stock", variant.getStock(), "link", link),
+                name + " (" + variant.getSku() + ") is down to " + variant.getStock() + " units.\nRestock: " + link);
     }
-
     private Email build(String to, String subject, String template, Map<String, Object> variables, String text) {
         Context context = new Context(Locale.ENGLISH, variables);
         return new Email(to, subject, text, templates.process("mail/" + template, context));

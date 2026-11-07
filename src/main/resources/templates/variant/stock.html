@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Stock')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('products')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/manage/products}">Products</a></li>
+            <li class="breadcrumb-item" th:if="${variant.product.optioned}"><a th:href="@{/manage/products/{id}/variants(id=${variant.product.id})}" th:text="${variant.product.name}">Product</a></li>
+            <li class="breadcrumb-item" th:unless="${variant.product.optioned}" th:text="${variant.product.name}">Product</li>
+            <li class="breadcrumb-item active" aria-current="page">Stock</li>
+        </ol>
+    </nav>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="panel mb-4">
+                <h1 class="h5 mb-1" th:text="${variant.product.name}">Product</h1>
+                <p class="text-secondary mb-3"><span th:text="${variant.label != null} ? ${variant.label} : 'Single item'">M</span> · <code th:text="${variant.sku}">SKU</code></p>
+                <div class="kpi"><span class="kpi-label">In stock</span><span class="kpi-value" th:text="${variant.stock}">0</span></div>
+            </div>
+            <form class="panel" th:action="@{/manage/variants/{id}/stock(id=${variant.id})}" th:object="${form}" method="post" novalidate>
+                <h2 class="h6 mb-3">Change stock</h2>
+                <div class="mb-3">
+                    <label class="form-label" for="delta">Change by</label>
+                    <input class="form-control" id="delta" type="number" th:field="*{delta}" th:errorclass="is-invalid" step="1">
+                    <div class="invalid-feedback" th:errors="*{delta}"></div>
+                    <div class="form-text">Use a minus sign to remove, for example -3.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="reason">Reason</label>
+                    <select class="form-select" id="reason" th:field="*{reason}">
+                        <option th:each="r : ${reasons}" th:value="${r}" th:text="${r.label}"></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="note">Note <span class="text-secondary">(optional)</span></label>
+                    <input class="form-control" id="note" th:field="*{note}" th:errorclass="is-invalid" maxlength="200">
+                    <div class="invalid-feedback" th:errors="*{note}"></div>
+                </div>
+                <button class="btn btn-primary w-100" type="submit">Save change</button>
+            </form>
+        </div>
+        <div class="col-lg-8">
+            <h2 class="h5 mb-3">History</h2>
+            <p class="empty" th:if="${history.empty}">No stock changes recorded yet.</p>
+            <div class="panel p-0 table-responsive" th:unless="${history.empty}">
+                <table class="table mb-0">
+                    <thead><tr><th>When</th><th class="num">Change</th><th>Reason</th><th>Note</th><th>By</th></tr></thead>
+                    <tbody>
+                        <tr th:each="m : ${history.content}">
+                            <td th:text="${#temporals.format(m.createdAt, 'd MMM yyyy HH:mm')}">Date</td>
+                            <td class="num fw-semibold" th:classappend="${m.delta > 0} ? 'text-success' : 'text-danger'" th:text="${m.delta > 0 ? '+' : ''} + ${m.delta}">+5</td>
+                            <td><span th:text="${m.reason.label}">Reason</span> <a th:if="${m.orderId != null}" th:href="@{/manage/orders/{id}(id=${m.orderId})}" th:text="'#' + ${m.orderId}">#1</a></td>
+                            <td th:text="${m.note}">Note</td>
+                            <td th:text="${m.actor != null} ? ${m.actor.fullName} : '-'">Name</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav class="mt-3" aria-label="Pages" th:if="${history.totalPages > 1}">
+                <ul class="pagination">
+                    <li class="page-item" th:classappend="${history.first} ? 'disabled'"><a class="page-link" th:href="@{/manage/variants/{id}/stock(id=${variant.id},page=${history.number - 1})}">Previous</a></li>
+                    <li class="page-item disabled"><span class="page-link" th:text="${history.number + 1} + ' / ' + ${history.totalPages}">1 / 1</span></li>
+                    <li class="page-item" th:classappend="${history.last} ? 'disabled'"><a class="page-link" th:href="@{/manage/variants/{id}/stock(id=${variant.id},page=${history.number + 1})}">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

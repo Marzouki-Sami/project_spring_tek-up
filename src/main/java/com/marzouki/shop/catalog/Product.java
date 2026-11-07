@@ -3,6 +3,9 @@ package com.marzouki.shop.catalog;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -31,9 +34,6 @@ public class Product {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(nullable = false)
-    private int stock;
-
     /** Inactive products are hidden from customers but keep their order history. */
     @Column(nullable = false)
     private boolean active = true;
@@ -46,6 +46,53 @@ public class Product {
     @JoinColumn(name = "supplier_id")
     private Supplier supplier;
 
+    /** Null for a simple product; otherwise says which options the variants are built from. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_type_id")
+    private ProductType productType;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position, id")
+    private List<ProductVariant> variants = new ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    public ProductVariant addVariant(String sku, int stock) {
+        ProductVariant variant = new ProductVariant();
+        variant.setProduct(this);
+        variant.setSku(sku);
+        variant.setStock(stock);
+        variant.setPosition(variants.size());
+        variants.add(variant);
+        return variant;
+    }
+
+    /** Units on hand across the variants that can be bought. */
+    public int getStock() {
+        return variants.stream().filter(ProductVariant::isActive).mapToInt(ProductVariant::getStock).sum();
+    }
+
+    public boolean isOptioned() {
+        return productType != null;
+    }
+
+    /** The only variant of a simple product. */
+    public ProductVariant getDefaultVariant() {
+        return variants.isEmpty() ? null : variants.get(0);
+    }
+
+    public List<ProductVariant> getActiveVariants() {
+        return variants.stream().filter(ProductVariant::isActive).toList();
+    }
+
+    /** The lowest price a customer could pay: the product price or the cheapest variant override. */
+    public java.math.BigDecimal getFromPrice() {
+        return getActiveVariants().stream().map(ProductVariant::getEffectivePrice)
+                .min(Comparator.naturalOrder()).orElse(price);
+    }
+
+    public boolean isPriceVaries() {
+        return getActiveVariants().stream().map(ProductVariant::getEffectivePrice).distinct().count() > 1;
+    }
 }

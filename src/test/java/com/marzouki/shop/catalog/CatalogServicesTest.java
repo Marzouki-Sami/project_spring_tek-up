@@ -74,14 +74,16 @@ class CatalogServicesTest {
     }
 
     @Test
-    void updatingAProductKeepsItsOwnSku() {
+    void updatingAProductKeepsItsOwnSkuAndItsStock() {
         Product product = products.create(productForm("PH-1"));
         ProductForm form = products.formFor(product.getId());
-        form.setStock(9);
+        form.setName("Renamed phone");
+        form.setStock(99);
 
         Product updated = products.update(product.getId(), form);
 
-        assertThat(updated.getStock()).isEqualTo(9);
+        assertThat(updated.getName()).isEqualTo("Renamed phone");
+        assertThat(updated.getStock()).isEqualTo(5);
         assertThat(updated.getSku()).isEqualTo("PH-1");
     }
 

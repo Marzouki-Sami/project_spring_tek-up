@@ -34,6 +34,7 @@ class OrderServiceTest {
     @Autowired CartService carts;
     @Autowired UserService users;
     @Autowired ProductRepository products;
+    @Autowired com.marzouki.shop.catalog.ProductVariantRepository variantRepository;
     @Autowired CategoryRepository categories;
     @Autowired SubcategoryRepository subcategories;
     @Autowired StockMovementRepository movements;
@@ -61,7 +62,7 @@ class OrderServiceTest {
         p.setSku(sku);
         p.setName(name);
         p.setPrice(new BigDecimal(price));
-        p.setStock(stock);
+        p.addVariant(sku, stock);
         p.setSubcategory(sub);
         return products.save(p);
     }
@@ -85,7 +86,7 @@ class OrderServiceTest {
     @Test
     void placingAnOrderCopiesLinesTakesStockAndLogsTheMovement() {
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 2);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 2);
         Order order = orders.place(buyer.getId(), address(), cart);
 
         assertThat(order.getTotal()).isEqualByComparingTo("40.00");
@@ -101,15 +102,15 @@ class OrderServiceTest {
     @Test
     void theBasketCannotExceedTheStock() {
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 50);
-        assertThat(cart.quantityOf(lamp.getId())).isEqualTo(5);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 50);
+        assertThat(cart.quantityOf(lamp.getDefaultVariant().getId())).isEqualTo(5);
     }
 
     @Test
     void stockThatDisappearsAfterAddingShrinksTheBasketLine() {
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 3);
-        products.takeStock(lamp.getId(), 4);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 3);
+        variantRepository.takeStock(lamp.getDefaultVariant().getId(), 4);
         em.clear();
 
         var line = carts.view(cart).lines().get(0);
@@ -127,7 +128,7 @@ class OrderServiceTest {
     void aCouponReducesTheTotalAndCountsItsUse() {
         orders.createCoupon("save25", 25, null, 1);
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 2);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 2);
         carts.applyCoupon(cart, "SAVE25");
 
         Order order = orders.place(buyer.getId(), address(), cart);
@@ -137,7 +138,7 @@ class OrderServiceTest {
         em.flush();
         em.clear();
         Cart second = new Cart();
-        carts.add(second, lamp.getId(), 1);
+        carts.add(second, lamp.getDefaultVariant().getId(), 1);
         assertThatThrownBy(() -> carts.applyCoupon(second, "SAVE25")).isInstanceOf(ConflictException.class);
     }
 
@@ -153,7 +154,7 @@ class OrderServiceTest {
     void cancellingReturnsStockAndTheCouponUse() {
         orders.createCoupon("ONCE", 10, null, 1);
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 2);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 2);
         carts.applyCoupon(cart, "ONCE");
         Order order = orders.place(buyer.getId(), address(), cart);
 
@@ -161,7 +162,7 @@ class OrderServiceTest {
 
         assertThat(stockOf(lamp.getId())).isEqualTo(5);
         Cart again = new Cart();
-        carts.add(again, lamp.getId(), 1);
+        carts.add(again, lamp.getDefaultVariant().getId(), 1);
         carts.applyCoupon(again, "ONCE");
         assertThat(orders.get(order.getId()).getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
@@ -169,7 +170,7 @@ class OrderServiceTest {
     @Test
     void statusMovesForwardOnlyAndOwnersCannotCancelOnceProcessing() {
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 1);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 1);
         Order order = orders.place(buyer.getId(), address(), cart);
 
         assertThatThrownBy(() -> orders.changeStatus(order.getId(), OrderStatus.DELIVERED))
@@ -186,7 +187,7 @@ class OrderServiceTest {
     @Test
     void customersCannotSeeOtherCustomersOrders() {
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 1);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 1);
         Order order = orders.place(buyer.getId(), address(), cart);
         User other = users.create("Oz", "Other", "oz@example.com", TestPasswords.strong(), Role.CUSTOMER);
 
@@ -196,7 +197,7 @@ class OrderServiceTest {
     @Test
     void anOrderIsRefusedWhenTheTotalChangedSinceTheCustomerSawIt() {
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 2);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 2);
         ShippingForm form = address();
         form.setExpectedTotal(new BigDecimal("39.00"));
         assertThatThrownBy(() -> orders.place(buyer.getId(), form, cart))
@@ -210,7 +211,7 @@ class OrderServiceTest {
     @Test
     void aStatusChangeThatLostARaceIsRefusedAndRestocksOnlyOnce() {
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 2);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 2);
         Order order = orders.place(buyer.getId(), address(), cart);
 
         // Someone else cancels first; this caller still sees the order as placed.

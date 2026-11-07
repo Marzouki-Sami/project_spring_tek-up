@@ -2,8 +2,18 @@ package com.marzouki.shop.setup;
 
 import com.marzouki.shop.catalog.Category;
 import com.marzouki.shop.catalog.CategoryRepository;
+import com.marzouki.shop.catalog.OptionType;
+import com.marzouki.shop.catalog.OptionTypeRepository;
+import com.marzouki.shop.catalog.OptionValue;
 import com.marzouki.shop.catalog.Product;
 import com.marzouki.shop.catalog.ProductRepository;
+import com.marzouki.shop.catalog.ProductType;
+import com.marzouki.shop.catalog.ProductTypeRepository;
+import com.marzouki.shop.catalog.ProductVariant;
+import com.marzouki.shop.catalog.ProductVariantRepository;
+import com.marzouki.shop.catalog.VariantService;
+import com.marzouki.shop.order.StockMovement;
+import com.marzouki.shop.order.StockService;
 import com.marzouki.shop.catalog.Subcategory;
 import com.marzouki.shop.catalog.SubcategoryRepository;
 import com.marzouki.shop.catalog.Supplier;
@@ -13,6 +23,12 @@ import com.marzouki.shop.user.UserRepository;
 import com.marzouki.shop.user.UserService;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -42,6 +58,11 @@ public class DemoDataLoader implements ApplicationRunner {
     private final com.marzouki.shop.order.OrderService orders;
     private final com.marzouki.shop.cart.CartService carts;
     private final com.marzouki.shop.engagement.EngagementService engagement;
+    private final ProductVariantRepository variants;
+    private final OptionTypeRepository optionTypes;
+    private final ProductTypeRepository productTypes;
+    private final VariantService variantService;
+    private final StockService stock;
 
     @Override
     @Transactional
@@ -78,6 +99,33 @@ public class DemoDataLoader implements ApplicationRunner {
         product("BAG-002", "Harbor Tote", "Waxed canvas tote for daily errands.", "54.00", 18, bags, atelier);
         product("SHO-001", "Trail Runner Sneakers", "Grippy, breathable sneakers for city and trail.", "119.00", 27, shoes, atelier);
         product("SHO-002", "Classic Leather Boots", "Handmade boots in full-grain leather.", "199.00", 4, shoes, atelier);
+        Subcategory tops = sub("Fashion", "Tops");
+
+        Map<String, String> sizes = new LinkedHashMap<>();
+        for (String label : List.of("S", "M", "L", "XL")) {
+            sizes.put(label, null);
+        }
+        Map<String, String> shoeSizes = new LinkedHashMap<>();
+        for (int n = 40; n <= 45; n++) {
+            shoeSizes.put(String.valueOf(n), null);
+        }
+        Map<String, String> colors = new LinkedHashMap<>();
+        colors.put("Black", "#111827");
+        colors.put("Navy", "#1e3a8a");
+        colors.put("Olive", "#4d5d2f");
+        colors.put("Sand", "#d6c3a1");
+        OptionType size = optionType("Size", OptionType.Display.TEXT, sizes);
+        OptionType shoeSize = optionType("Shoe size", OptionType.Display.TEXT, shoeSizes);
+        OptionType color = optionType("Color", OptionType.Display.COLOR, colors);
+        ProductType clothing = productType("Clothing", size, color);
+        ProductType footwear = productType("Footwear", shoeSize, color);
+
+        typedProduct("TEE-001", "Classic Cotton Tee", "Soft, heavyweight organic cotton in three colours.", "24.00", tops, atelier,
+                clothing, Map.of(size, List.of("S", "M", "L", "XL"), color, List.of("Black", "Navy", "Olive")));
+        typedProduct("HOO-001", "Everyday Hoodie", "Brushed fleece hoodie with a roomy hood.", "59.00", tops, atelier,
+                clothing, Map.of(size, List.of("S", "M", "L"), color, List.of("Black", "Sand")));
+        typedProduct("SHO-003", "Court Sneakers", "Clean leather sneakers that go with everything.", "89.00", shoes, atelier,
+                footwear, Map.of(shoeSize, List.of("40", "41", "42", "43", "44"), color, List.of("Black", "Sand")));
         orders.createCoupon("WELCOME10", 10, null, null);
         seedActivity();
         log.info("Demo data created. Sign in with admin@demo.shop, manager@demo.shop or customer@demo.shop using the passwords printed to the console above. Coupon WELCOME10 gives 10% off.");
@@ -94,6 +142,7 @@ public class DemoDataLoader implements ApplicationRunner {
         place(noor, "AUD-001", 1, com.marzouki.shop.order.OrderStatus.DELIVERED);
         place(noor, "BAG-001", 1, com.marzouki.shop.order.OrderStatus.PROCESSING);
         place(lena, "LAP-001", 1, com.marzouki.shop.order.OrderStatus.PLACED);
+        place(noor, "TEE-001-M-BLACK", 2, com.marzouki.shop.order.OrderStatus.PLACED);
         place(lena, "AUD-001", 1, com.marzouki.shop.order.OrderStatus.DELIVERED);
 
         review(cleo, "AUD-001", 5, "Great sound and the noise cancelling really works. Battery lasts for days.");
@@ -105,8 +154,7 @@ public class DemoDataLoader implements ApplicationRunner {
     private void place(com.marzouki.shop.user.User buyer, String sku, int quantity,
                        com.marzouki.shop.order.OrderStatus target) {
         var cart = new com.marzouki.shop.cart.Cart();
-        carts.add(cart, products.findAll().stream().filter(p -> p.getSku().equals(sku)).findFirst().orElseThrow().getId(),
-                quantity);
+        carts.add(cart, variantBySku(sku).getId(), quantity);
         var address = new com.marzouki.shop.order.dto.ShippingForm();
         address.setFullName(buyer.getFullName());
         address.setAddress("12 Example Street");
@@ -180,16 +228,68 @@ public class DemoDataLoader implements ApplicationRunner {
                 });
     }
 
-    private void product(String sku, String name, String description, String price, int stock,
-                         Subcategory subcategory, Supplier supplier) {
+    private Product product(String sku, String name, String description, String price, int stock,
+                            Subcategory subcategory, Supplier supplier) {
+        Product product = newProduct(sku, name, description, price, subcategory, supplier);
+        ProductVariant variant = product.addVariant(sku, 0);
+        products.saveAndFlush(product);
+        stockIn(variant, stock);
+        return product;
+    }
+
+    private Product newProduct(String sku, String name, String description, String price,
+                               Subcategory subcategory, Supplier supplier) {
         Product product = new Product();
         product.setSku(sku);
         product.setName(name);
         product.setDescription(description);
         product.setPrice(new BigDecimal(price));
-        product.setStock(stock);
         product.setSubcategory(subcategory);
         product.setSupplier(supplier);
-        products.save(product);
+        return product;
+    }
+
+    private void stockIn(ProductVariant variant, int quantity) {
+        if (quantity > 0) {
+            stock.adjust(variant.getId(), quantity, StockMovement.Reason.INITIAL, null);
+        }
+    }
+
+    /** A product sold in sizes and colours: variants are generated, then given some stock. */
+    private void typedProduct(String sku, String name, String description, String price, Subcategory subcategory,
+                              Supplier supplier, ProductType type, Map<OptionType, List<String>> offered) {
+        Product product = newProduct(sku, name, description, price, subcategory, supplier);
+        product.setProductType(type);
+        products.saveAndFlush(product);
+        Map<Long, Set<Long>> chosen = new HashMap<>();
+        offered.forEach((optionType, labels) -> chosen.put(optionType.getId(), optionType.getValues().stream()
+                .filter(v -> labels.contains(v.getLabel())).map(OptionValue::getId).collect(Collectors.toSet())));
+        variantService.generate(product.getId(), chosen);
+        Product loaded = variantService.productWithVariants(product.getId());
+        int index = 0;
+        for (ProductVariant variant : loaded.getVariants()) {
+            // Spread the stock so some sizes are plentiful, some low and a few sold out.
+            int[] pattern = {14, 9, 22, 3, 0, 17, 6, 11};
+            stockIn(variant, pattern[index++ % pattern.length]);
+        }
+    }
+
+    private ProductType productType(String name, OptionType... allowed) {
+        ProductType type = new ProductType();
+        type.setName(name);
+        type.getOptionTypes().addAll(List.of(allowed));
+        return productTypes.save(type);
+    }
+
+    private OptionType optionType(String name, OptionType.Display display, Map<String, String> values) {
+        OptionType type = new OptionType();
+        type.setName(name);
+        type.setDisplay(display);
+        values.forEach(type::addValue);
+        return optionTypes.save(type);
+    }
+
+    private ProductVariant variantBySku(String sku) {
+        return variants.findBySku(sku).orElseThrow();
     }
 }

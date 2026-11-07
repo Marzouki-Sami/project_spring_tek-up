@@ -1,7 +1,7 @@
 package com.marzouki.shop.mail;
 
-import com.marzouki.shop.catalog.Product;
-import com.marzouki.shop.catalog.ProductRepository;
+import com.marzouki.shop.catalog.ProductVariant;
+import com.marzouki.shop.catalog.ProductVariantRepository;
 import com.marzouki.shop.order.Order;
 import com.marzouki.shop.order.OrderEvents;
 import com.marzouki.shop.order.OrderRepository;
@@ -32,7 +32,7 @@ class NotificationService {
     private final MailOutbox outbox;
     private final UserRepository users;
     private final OrderRepository orders;
-    private final ProductRepository products;
+    private final ProductVariantRepository variantRepository;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
@@ -63,13 +63,13 @@ class NotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     void onLowStock(OrderEvents.LowStock event) {
-        Product product = products.findById(event.productId()).orElse(null);
-        if (product == null) {
+        ProductVariant variant = variantRepository.findWithDetailsById(event.variantId()).orElse(null);
+        if (variant == null) {
             return;
         }
         List<User> staff = users.findByRoleInAndEnabledTrue(List.of(Role.MANAGER, Role.ADMIN));
         for (User person : staff) {
-            deliver("low stock alert", () -> composer.lowStock(person.getEmail(), product));
+            deliver("low stock alert", () -> composer.lowStock(person.getEmail(), variant));
         }
     }
 

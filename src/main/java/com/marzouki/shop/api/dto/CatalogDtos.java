@@ -23,17 +23,24 @@ public final class CatalogDtos {
         }
     }
 
+    public record VariantResponse(Long id, String sku, String label, BigDecimal price, int stock, boolean active) {
+        public static VariantResponse of(com.marzouki.shop.catalog.ProductVariant v) {
+            return new VariantResponse(v.getId(), v.getSku(), v.getLabel(), v.getEffectivePrice(), v.getStock(),
+                    v.isActive());
+        }
+    }
+
     public record ProductResponse(Long id, String sku, String name, String description, BigDecimal price, int stock,
                                   boolean active, Long categoryId, String category, Long subcategoryId,
-                                  String subcategory) {
+                                  String subcategory, String productType, List<VariantResponse> variants) {
         public static ProductResponse of(Product p) {
             return new ProductResponse(p.getId(), p.getSku(), p.getName(), p.getDescription(), p.getPrice(),
                     p.getStock(), p.isActive(), p.getSubcategory().getCategory().getId(),
                     p.getSubcategory().getCategory().getTitle(), p.getSubcategory().getId(),
-                    p.getSubcategory().getTitle());
+                    p.getSubcategory().getTitle(), p.getProductType() == null ? null : p.getProductType().getName(),
+                    p.getVariants().stream().map(VariantResponse::of).toList());
         }
     }
-
     public record PageResponse<T>(List<T> content, int page, int size, long totalElements, int totalPages) {
         public static <S, T> PageResponse<T> of(Page<S> page, java.util.function.Function<S, T> mapper) {
             return new PageResponse<>(page.getContent().stream().map(mapper).toList(), page.getNumber(),

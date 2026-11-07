@@ -27,7 +27,15 @@ public class OrderItem {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(nullable = false, length = 40)
+    /** Cleared when the variant is deleted; the copies below keep the line readable. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id")
+    private com.marzouki.shop.catalog.ProductVariant variant;
+
+    @Column(name = "variant_label", length = 200)
+    private String variantLabel;
+
+    @Column(nullable = false, length = 60)
     private String sku;
 
     @Column(nullable = false, length = 150)

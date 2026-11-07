@@ -77,7 +77,7 @@ class EngagementTest {
         lamp.setSku("L-1");
         lamp.setName("Lamp");
         lamp.setPrice(new BigDecimal("20.00"));
-        lamp.setStock(3);
+        lamp.addVariant("L-1", 3);
         lamp.setSubcategory(sub);
         products.save(lamp);
         buyer = users.create("Bea", "Buyer", "bea@example.com", TestPasswords.strong(), Role.CUSTOMER);
@@ -85,7 +85,7 @@ class EngagementTest {
         manager = users.create("Mo", "Manager", "mo@example.com", TestPasswords.strong(), Role.MANAGER);
 
         Cart cart = new Cart();
-        carts.add(cart, lamp.getId(), 1);
+        carts.add(cart, lamp.getDefaultVariant().getId(), 1);
         ShippingForm address = new ShippingForm();
         address.setFullName("Bea Buyer");
         address.setAddress("1 Main Street");

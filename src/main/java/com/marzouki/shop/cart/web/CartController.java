@@ -28,10 +28,10 @@ public class CartController {
     }
 
     @PostMapping("/add")
-    public String add(@RequestParam Long productId, @RequestParam(defaultValue = "1") int quantity,
+    public String add(@RequestParam Long variantId, @RequestParam(defaultValue = "1") int quantity,
                       RedirectAttributes flash) {
         try {
-            carts.add(cart, productId, quantity);
+            carts.add(cart, variantId, quantity);
             flash.addFlashAttribute("success", "Added to your cart");
         } catch (ConflictException e) {
             flash.addFlashAttribute("error", e.getMessage());
@@ -40,14 +40,14 @@ public class CartController {
     }
 
     @PostMapping("/update")
-    public String update(@RequestParam Long productId, @RequestParam int quantity) {
-        carts.setQuantity(cart, productId, quantity);
+    public String update(@RequestParam Long variantId, @RequestParam int quantity) {
+        carts.setQuantity(cart, variantId, quantity);
         return "redirect:/cart";
     }
 
     @PostMapping("/remove")
-    public String remove(@RequestParam Long productId) {
-        cart.remove(productId);
+    public String remove(@RequestParam Long variantId) {
+        cart.remove(variantId);
         return "redirect:/cart";
     }
 

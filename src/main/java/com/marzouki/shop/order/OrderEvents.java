@@ -12,6 +12,10 @@ public final class OrderEvents {
     }
 
     /** A product's stock has just dropped to the warning level. */
-    public record LowStock(Long productId) {
+    public record LowStock(Long variantId) {
+    }
+
+    /** A variant that was sold out has stock again. */
+    public record BackInStock(Long variantId) {
     }
 }
