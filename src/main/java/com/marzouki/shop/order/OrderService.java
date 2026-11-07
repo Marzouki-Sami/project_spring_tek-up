@@ -63,6 +63,10 @@ public class OrderService {
         order.setCity(shipping.getCity().trim());
         order.setPostalCode(shipping.getPostalCode().trim());
         order.setCountry(shipping.getCountry().trim());
+        order.setPhone(shipping.getPhone() == null || shipping.getPhone().isBlank() ? null : shipping.getPhone().trim());
+        boolean pinned = shipping.getLatitude() != null && shipping.getLongitude() != null;
+        order.setLatitude(pinned ? shipping.getLatitude() : null);
+        order.setLongitude(pinned ? shipping.getLongitude() : null);
         order.setCouponCode(view.couponCode());
         order.setSubtotal(view.subtotal());
         order.setDiscount(view.discount());

@@ -24,6 +24,8 @@ public class AuthController {
 
     private final UserService users;
     private final SessionLogin sessionLogin;
+    private final com.marzouki.shop.cart.CartStore cartStore;
+    private final com.marzouki.shop.cart.Cart cart;
 
     @GetMapping("/login")
     public String login(Authentication authentication) {
@@ -52,6 +54,7 @@ public class AuthController {
         try {
             User user = users.register(form);
             sessionLogin.start(user, request, response);
+            cartStore.signIn(user.getId(), cart);
             return "redirect:/?welcome";
         } catch (ConflictException e) {
             result.rejectValue("email", "taken", e.getMessage());

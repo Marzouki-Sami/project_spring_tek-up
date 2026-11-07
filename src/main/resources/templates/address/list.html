@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('My addresses')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('account')}"></nav>
+<main class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">My addresses</h1>
+            <span class="text-secondary small" th:text="${#lists.size(addresses)} + ' of ' + ${max} + ' saved'">0 of 10 saved</span>
+        </div>
+        <a class="btn btn-primary" th:href="@{/account/addresses/new}" th:if="${#lists.size(addresses) < max}"><i class="bi bi-plus-lg"></i> New address</a>
+    </div>
+    <div class="empty" th:if="${#lists.isEmpty(addresses)}">
+        <p class="mb-3">You have no saved addresses yet. Add one to check out faster.</p>
+        <a class="btn btn-primary" th:href="@{/account/addresses/new}">Add an address</a>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-6" th:each="a : ${addresses}">
+            <div class="panel h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h2 class="h5 mb-0" th:text="${a.label}">Home</h2>
+                    <span class="badge text-bg-primary" th:if="${a.defaultAddress}">Default</span>
+                </div>
+                <p class="mb-1" th:text="${a.fullName}">Name</p>
+                <p class="text-secondary mb-1" th:text="${a.oneLine}">Street</p>
+                <p class="text-secondary small mb-3" th:if="${a.phone != null}"><i class="bi bi-telephone"></i> <span th:text="${a.phone}">Phone</span></p>
+                <p class="small mb-3" th:if="${a.hasPosition()}"><i class="bi bi-geo-alt-fill text-danger"></i> Pinned on the map</p>
+                <div class="d-flex flex-wrap gap-2 mt-auto">
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/account/addresses/{id}/edit(id=${a.id})}">Edit</a>
+                    <form th:unless="${a.defaultAddress}" th:action="@{/account/addresses/{id}/default(id=${a.id})}" method="post">
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">Make default</button>
+                    </form>
+                    <form th:action="@{/account/addresses/{id}/delete(id=${a.id})}" method="post" data-confirm="Delete this address?">
+                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete address"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

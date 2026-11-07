@@ -11,33 +11,39 @@
                 <h2 class="h5 mb-3">Delivery address</h2>
                 <div class="alert alert-danger" role="alert" th:if="${#fields.hasGlobalErrors()}" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
                 <input type="hidden" th:field="*{expectedTotal}">
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label class="form-label" for="fullName">Full name</label>
-                        <input class="form-control" id="fullName" th:field="*{fullName}" th:errorclass="is-invalid" autocomplete="name">
-                        <div class="invalid-feedback" th:errors="*{fullName}"></div>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="address">Street address</label>
-                        <input class="form-control" id="address" th:field="*{address}" th:errorclass="is-invalid" autocomplete="street-address">
-                        <div class="invalid-feedback" th:errors="*{address}"></div>
-                    </div>
-                    <div class="col-sm-5">
-                        <label class="form-label" for="postalCode">Postal code</label>
-                        <input class="form-control" id="postalCode" th:field="*{postalCode}" th:errorclass="is-invalid" autocomplete="postal-code">
-                        <div class="invalid-feedback" th:errors="*{postalCode}"></div>
-                    </div>
-                    <div class="col-sm-7">
-                        <label class="form-label" for="city">City</label>
-                        <input class="form-control" id="city" th:field="*{city}" th:errorclass="is-invalid" autocomplete="address-level2">
-                        <div class="invalid-feedback" th:errors="*{city}"></div>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="country">Country</label>
-                        <input class="form-control" id="country" th:field="*{country}" th:errorclass="is-invalid" autocomplete="country-name">
-                        <div class="invalid-feedback" th:errors="*{country}"></div>
+
+                <fieldset class="mb-3" th:if="${!#lists.isEmpty(addresses)}">
+                    <legend class="visually-hidden">Choose where to deliver</legend>
+                    <label class="addr-option" th:each="a : ${addresses}">
+                        <input type="radio" name="addressId" th:value="${a.id}" th:checked="${form.addressId != null and form.addressId == a.id}">
+                        <span class="addr-card">
+                            <span class="d-flex justify-content-between"><strong th:text="${a.label}">Home</strong>
+                                <span class="badge text-bg-light border" th:if="${a.defaultAddress}">Default</span></span>
+                            <span class="d-block" th:text="${a.fullName}">Name</span>
+                            <span class="d-block text-secondary small" th:text="${a.oneLine}">Street</span>
+                            <span class="d-block text-secondary small" th:if="${a.phone != null}" th:text="${a.phone}">Phone</span>
+                        </span>
+                    </label>
+                    <label class="addr-option">
+                        <input type="radio" name="addressId" value="" th:checked="${form.addressId == null}">
+                        <span class="addr-card"><i class="bi bi-plus-circle"></i> Deliver somewhere else</span>
+                    </label>
+                </fieldset>
+
+                <div id="new-address" th:classappend="${form.addressId != null} ? 'd-none'">
+                    <div th:replace="~{fragments/address :: fields}"></div>
+                    <div class="row g-3 mt-1 align-items-end">
+                        <div class="col-12 form-check ms-1">
+                            <input class="form-check-input" type="checkbox" id="saveAddress" th:field="*{saveAddress}">
+                            <label class="form-check-label" for="saveAddress">Save this address to my account</label>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="addressLabel">Name it</label>
+                            <input class="form-control" id="addressLabel" th:field="*{addressLabel}" placeholder="Home" maxlength="40">
+                        </div>
                     </div>
                 </div>
+
                 <button class="btn btn-primary btn-lg w-100 mt-4" type="submit">Place order</button>
                 <p class="text-secondary small mt-3 mb-0"><i class="bi bi-info-circle"></i> Online payment is not available yet. This demo shop records the order only.</p>
             </form>
@@ -46,7 +52,7 @@
             <div class="panel">
                 <h2 class="h5 mb-3">Your order</h2>
                 <div class="d-flex justify-content-between mb-2" th:each="line : ${cart.lines}">
-                    <span><span th:text="${line.quantity}">1</span> × <span th:text="${line.product.name}">Product</span><span class="text-secondary small" th:if="${line.variant.label != null}" th:text="' ('+ ${line.variant.shortLabel} + ')'"></span></span>
+                    <span><span th:text="${line.quantity}">1</span> × <span th:text="${line.product.name}">Product</span><span class="text-secondary small" th:if="${line.variant.label != null}" th:text="' (' + ${line.variant.shortLabel} + ')'"></span></span>
                     <span th:text="${#numbers.formatDecimal(line.lineTotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0</span>
                 </div>
                 <hr>
@@ -58,7 +64,9 @@
             </div>
         </div>
     </div>
-</main><footer th:replace="~{fragments/layout :: footer}"></footer>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:replace="~{fragments/address :: scripts}"></th:block>
 </body>
 </html>

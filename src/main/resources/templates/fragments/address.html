@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<!-- The address fields with search, "use my location" and a map. Expects a form with fullName, phone, address, postalCode, city, country, latitude and longitude. -->
+<div th:fragment="fields" class="address-picker" th:attr="data-geo=${geo.enabled},data-tile-url=${geo.tileUrl},data-attribution=${geo.attribution}">
+    <link rel="stylesheet" th:href="@{/webjars/leaflet/dist/leaflet.css}" th:if="${geo.enabled}">
+    <div class="geo-tools mb-3" th:if="${geo.enabled}">
+        <div class="position-relative mb-2">
+            <label class="form-label" for="geo-search">Search for an address</label>
+            <input class="form-control" id="geo-search" type="search" autocomplete="off" maxlength="200"
+                   placeholder="Start typing a street or a place" role="combobox" aria-expanded="false" aria-controls="geo-results" aria-autocomplete="list">
+            <ul class="geo-results list-unstyled" id="geo-results" role="listbox" hidden></ul>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="geo-locate"><i class="bi bi-crosshair"></i> Use my current location</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="geo-map-toggle" aria-expanded="false" aria-controls="geo-map-panel"><i class="bi bi-map"></i> Pick on the map</button>
+        </div>
+        <div id="geo-map-panel" class="mt-3" hidden>
+            <div id="geo-map" class="geo-map" role="application" aria-label="Map. Click to choose the delivery spot."></div>
+            <p class="form-text mb-0">Click the map or drag the pin to choose the spot. Search and map by OpenStreetMap contributors.</p>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-7">
+            <label class="form-label" for="fullName">Full name</label>
+            <input class="form-control" id="fullName" th:field="*{fullName}" th:errorclass="is-invalid" autocomplete="name">
+            <div class="invalid-feedback" th:errors="*{fullName}"></div>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label" for="phone">Phone <span class="text-secondary">(optional)</span></label>
+            <input class="form-control" id="phone" th:field="*{phone}" th:errorclass="is-invalid" autocomplete="tel">
+            <div class="invalid-feedback" th:errors="*{phone}"></div>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="address">Street address</label>
+            <input class="form-control" id="address" th:field="*{address}" th:errorclass="is-invalid" autocomplete="street-address">
+            <div class="invalid-feedback" th:errors="*{address}"></div>
+        </div>
+        <div class="col-sm-4">
+            <label class="form-label" for="postalCode">Postal code</label>
+            <input class="form-control" id="postalCode" th:field="*{postalCode}" th:errorclass="is-invalid" autocomplete="postal-code">
+            <div class="invalid-feedback" th:errors="*{postalCode}"></div>
+        </div>
+        <div class="col-sm-8">
+            <label class="form-label" for="city">City</label>
+            <input class="form-control" id="city" th:field="*{city}" th:errorclass="is-invalid" autocomplete="address-level2">
+            <div class="invalid-feedback" th:errors="*{city}"></div>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="country">Country</label>
+            <input class="form-control" id="country" th:field="*{country}" th:errorclass="is-invalid" autocomplete="country-name">
+            <div class="invalid-feedback" th:errors="*{country}"></div>
+        </div>
+    </div>
+    <input type="hidden" th:field="*{latitude}">
+    <input type="hidden" th:field="*{longitude}">
+    <p class="small text-secondary mt-2 mb-0" th:if="${geo.enabled}"><i class="bi bi-geo-alt"></i> A pinned spot helps the courier find you. It is optional.</p>
+</div>
+<th:block th:fragment="scripts">
+    <script th:src="@{/webjars/leaflet/dist/leaflet.js}" th:if="${geo.enabled}"></script>
+    <script th:src="@{/js/address.js}"></script>
+</th:block>
+</body>
+</html>
