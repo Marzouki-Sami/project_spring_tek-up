@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Images')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('products')}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+<main class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/manage/products}">Products</a></li>
+            <li class="breadcrumb-item" th:text="${product.name}">Product</li>
+            <li class="breadcrumb-item active" aria-current="page">Images</li>
+        </ol>
+    </nav>
+    <h1 class="h3 mb-1">Images</h1>
+    <p class="text-secondary mb-4">The first image is the preview on product cards and the first slide on the product page.
+        Up to <span th:text="${max}">8</span> images, JPG, PNG or WebP, 5 MB each.</p>
+
+    <form class="panel mb-4" th:action="@{/manage/products/{id}/images(id=${product.id})}" method="post" enctype="multipart/form-data"
+          th:if="${#lists.size(product.images) < max}">
+        <label class="form-label fw-semibold" for="files">Add images</label>
+        <div class="d-flex flex-wrap gap-2">
+            <input class="form-control upload-input" id="files" type="file" name="files" accept="image/jpeg,image/png,image/webp" multiple required>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-upload"></i> Upload</button>
+        </div>
+        <div class="form-text">Photos are resized and stripped of location data automatically.</div>
+    </form>
+    <div class="alert alert-info" th:unless="${#lists.size(product.images) < max}">This product has the maximum number of images. Remove one to add another.</div>
+
+    <p class="empty" th:if="${#lists.isEmpty(product.images)}">No images yet. Customers see a coloured placeholder until you add some.</p>
+    <div class="row g-4">
+        <div class="col-sm-6 col-lg-4 col-xl-3" th:each="img, stat : ${product.images}">
+            <div class="panel image-card p-2">
+                <div class="image-frame">
+                    <img th:src="${img.thumbUrl}" th:alt="${img.altText != null} ? ${img.altText} : ${product.name}" loading="lazy" width="400" th:height="${img.height * 400 / img.width}">
+                    <span class="badge text-bg-primary image-badge" th:if="${stat.first}">Preview</span>
+                </div>
+                <form class="mt-2" th:action="@{/manage/products/{p}/images/{i}/alt(p=${product.id},i=${img.id})}" method="post">
+                    <div class="input-group input-group-sm">
+                        <input class="form-control" name="altText" th:value="${img.altText}" maxlength="200" placeholder="Description for screen readers" aria-label="Image description">
+                        <button class="btn btn-outline-secondary" type="submit" aria-label="Save description"><i class="bi bi-check2"></i></button>
+                    </div>
+                </form>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div class="btn-group btn-group-sm">
+                        <form th:action="@{/manage/products/{p}/images/{i}/move(p=${product.id},i=${img.id})}" method="post">
+                            <input type="hidden" name="direction" value="-1">
+                            <button class="btn btn-outline-secondary" type="submit" th:disabled="${stat.first}" aria-label="Move earlier"><i class="bi bi-arrow-left"></i></button>
+                        </form>
+                        <form th:action="@{/manage/products/{p}/images/{i}/move(p=${product.id},i=${img.id})}" method="post">
+                            <input type="hidden" name="direction" value="1">
+                            <button class="btn btn-outline-secondary" type="submit" th:disabled="${stat.last}" aria-label="Move later"><i class="bi bi-arrow-right"></i></button>
+                        </form>
+                    </div>
+                    <form th:unless="${stat.first}" th:action="@{/manage/products/{p}/images/{i}/preview(p=${product.id},i=${img.id})}" method="post">
+                        <button class="btn btn-sm btn-outline-primary" type="submit">Make preview</button>
+                    </form>
+                    <form th:action="@{/manage/products/{p}/images/{i}/delete(p=${product.id},i=${img.id})}" method="post" data-confirm="Remove this image?">
+                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Remove image"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

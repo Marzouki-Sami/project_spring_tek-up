@@ -39,3 +39,6 @@ build/
 
 # Development emails written instead of sent
 mail-outbox/
+
+# Uploaded product images
+data/

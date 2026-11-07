@@ -42,5 +42,6 @@ public interface CatalogMapper {
     @Mapping(target = "supplier", ignore = true)
     @Mapping(target = "productType", ignore = true)
     @Mapping(target = "variants", ignore = true)
+    @Mapping(target = "images", ignore = true)
     void apply(ProductForm form, @MappingTarget Product product);
 }

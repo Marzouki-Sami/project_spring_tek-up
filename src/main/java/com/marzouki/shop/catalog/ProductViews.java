@@ -16,6 +16,7 @@ public final class ProductViews {
     public static void warm(Collection<Product> products) {
         for (Product product : products) {
             product.getVariants().size();
+            product.getImages().size();
         }
     }
 }

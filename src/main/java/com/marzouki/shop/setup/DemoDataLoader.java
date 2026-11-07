@@ -63,6 +63,8 @@ public class DemoDataLoader implements ApplicationRunner {
     private final ProductTypeRepository productTypes;
     private final VariantService variantService;
     private final StockService stock;
+    private final DemoImageFactory imageFactory;
+    private final com.marzouki.shop.media.ProductImageService imageService;
 
     @Override
     @Transactional
@@ -234,6 +236,7 @@ public class DemoDataLoader implements ApplicationRunner {
         ProductVariant variant = product.addVariant(sku, 0);
         products.saveAndFlush(product);
         stockIn(variant, stock);
+        pictures(product);
         return product;
     }
 
@@ -271,6 +274,15 @@ public class DemoDataLoader implements ApplicationRunner {
             // Spread the stock so some sizes are plentiful, some low and a few sold out.
             int[] pattern = {14, 9, 22, 3, 0, 17, 6, 11};
             stockIn(variant, pattern[index++ % pattern.length]);
+        }
+        pictures(loaded);
+    }
+
+    /** Two to four generated pictures per product, so the gallery has something to page through. */
+    private void pictures(Product product) {
+        int count = 2 + (int) (product.getId() % 3);
+        for (int i = 0; i < count; i++) {
+            imageService.add(product.getId(), imageFactory.generate(product.getId().intValue(), i), product.getName() + ", view " + (i + 1));
         }
     }
 

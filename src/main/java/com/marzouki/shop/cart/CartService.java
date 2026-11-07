@@ -85,6 +85,8 @@ public class CartService {
             subtotal = subtotal.add(lineTotal);
         }
 
+        com.marzouki.shop.catalog.ProductViews.warm(lines.stream().map(CartView.Line::product).distinct().toList());
+
         Coupon coupon = cart.getCouponCode() == null ? null
                 : coupons.findByCodeIgnoreCase(cart.getCouponCode()).orElse(null);
         if (coupon != null && coupon.problemAt(Instant.now()) != null) {
