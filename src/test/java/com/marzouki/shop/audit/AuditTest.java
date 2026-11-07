@@ -41,6 +41,7 @@ class AuditTest {
 
     @BeforeEach
     void data() {
+        audit.deleteAll();
         manager = users.create("Mo", "Manager", "mo@example.com", TestPasswords.strong(), Role.MANAGER);
         admin = users.create("Ada", "Admin", "ada@example.com", TestPasswords.strong(), Role.ADMIN);
     }
@@ -61,6 +62,7 @@ class AuditTest {
 
         List<AuditEntry> entries = audit.findAll();
         assertThat(entries).hasSize(2);
+        assertThat(entries).extracting(AuditEntry::getEntityType).containsOnly("categories");
         assertThat(entries).extracting(AuditEntry::getAction).containsOnly("categories.create");
         assertThat(entries).extracting(AuditEntry::getOutcome).containsExactlyInAnyOrder("OK", "REJECTED");
         assertThat(entries).allSatisfy(e -> {
@@ -76,7 +78,7 @@ class AuditTest {
         var asAdmin = user(new AppUserDetails(admin));
         mvc.perform(post("/admin/users/" + manager.getId() + "/enabled").with(asAdmin).with(csrf()).param("enabled", "false"))
                 .andExpect(status().is3xxRedirection());
-        AuditEntry entry = audit.findAll().get(0);
+        AuditEntry entry = audit.findAll().stream().filter(e -> e.getAction().equals("users.enabled")).findFirst().orElseThrow();
         assertThat(entry.getAction()).isEqualTo("users.enabled");
         assertThat(entry.getEntityType()).isEqualTo("users");
         assertThat(entry.getEntityId()).isEqualTo(String.valueOf(manager.getId()));

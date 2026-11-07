@@ -49,10 +49,10 @@ public class SecretVault {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(128, iv));
             byte[] encrypted = cipher.doFinal(plain.getBytes(StandardCharsets.UTF_8));
-            byte[] out = new byte[iv.length + encrypted.length];
-            System.arraycopy(iv, 0, out, 0, iv.length);
-            System.arraycopy(encrypted, 0, out, iv.length, encrypted.length);
-            return Base64.getEncoder().encodeToString(out);
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            out.writeBytes(iv);
+            out.writeBytes(encrypted);
+            return Base64.getEncoder().encodeToString(out.toByteArray());
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(e);
         }

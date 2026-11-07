@@ -48,6 +48,7 @@ class TwoFactorFlowTest {
 
     @BeforeEach
     void data() {
+        audit.deleteAll();
         password = TestPasswords.strong();
         manager = users.create("Mo", "Manager", "mo@example.com", password, Role.MANAGER);
     }
