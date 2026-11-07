@@ -27,8 +27,12 @@ public class AdminUserController {
     private final com.marzouki.shop.security.mfa.TwoFactorService twoFactor;
 
     @GetMapping
-    public String list(@AuthenticationPrincipal AppUserDetails me, Model model) {
-        model.addAttribute("users", users.findAll());
+    public String list(@AuthenticationPrincipal AppUserDetails me, @org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
+        model.addAttribute("page", users.search(query));
+        model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/admin/users", query.params()));
+        model.addAttribute("statuses", com.marzouki.shop.common.ListQuery.choices("", "Everyone", "CUSTOMER", "Customers", "MANAGER", "Managers", "ADMIN", "Admins",
+                "NO2FA", "Staff without 2FA", "LOCKED", "Locked", "DISABLED", "Disabled"));
+        model.addAttribute("sorts", com.marzouki.shop.common.ListQuery.choices("", "Name", "newest", "Newest first"));
         model.addAttribute("roles", Role.values());
         model.addAttribute("meId", me.getId());
         model.addAttribute("now", java.time.Instant.now());

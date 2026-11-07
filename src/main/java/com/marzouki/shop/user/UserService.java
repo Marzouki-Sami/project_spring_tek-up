@@ -5,6 +5,7 @@ import com.marzouki.shop.common.NotFoundException;
 import com.marzouki.shop.user.dto.PasswordChangeForm;
 import com.marzouki.shop.user.dto.ProfileForm;
 import com.marzouki.shop.user.dto.RegistrationForm;
+import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +31,22 @@ public class UserService {
     public User findByEmail(String email) {
         return users.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new NotFoundException("User", email));
+    }
+
+    public org.springframework.data.domain.Page<User> search(com.marzouki.shop.common.ListQuery query) {
+        Instant now = Instant.now();
+        org.springframework.data.jpa.domain.Specification<User> status = switch (query.getStatus()) {
+            case "CUSTOMER", "MANAGER", "ADMIN" -> (r, q, cb) -> cb.equal(r.get("role"), Role.valueOf(query.getStatus()));
+            case "DISABLED" -> (r, q, cb) -> cb.isFalse(r.get("enabled"));
+            case "LOCKED" -> (r, q, cb) -> cb.greaterThan(r.<Instant>get("lockedUntil"), now);
+            case "NO2FA" -> (r, q, cb) -> cb.and(cb.isFalse(r.get("totpEnabled")), cb.notEqual(r.get("role"), Role.CUSTOMER));
+            default -> com.marzouki.shop.common.Specs.none();
+        };
+        var sort = query.getSort().equals("newest")
+                ? org.springframework.data.domain.Sort.by("createdAt").descending().and(org.springframework.data.domain.Sort.by("id").descending())
+                : org.springframework.data.domain.Sort.by("lastName").ascending().and(org.springframework.data.domain.Sort.by("firstName")).and(org.springframework.data.domain.Sort.by("id"));
+        return users.findAll(com.marzouki.shop.common.Specs.<User>text(query.like(), "firstName", "lastName", "email").and(status),
+                query.pageRequest(sort));
     }
 
     public List<User> findAll() {

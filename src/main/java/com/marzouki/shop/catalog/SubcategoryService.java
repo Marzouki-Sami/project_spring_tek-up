@@ -18,6 +18,13 @@ public class SubcategoryService {
     private final ProductRepository products;
     private final CatalogMapper mapper;
 
+    public org.springframework.data.domain.Page<Subcategory> search(com.marzouki.shop.common.ListQuery query) {
+        var sort = query.getSort().equals("title")
+                ? org.springframework.data.domain.Sort.by("title").ascending().and(org.springframework.data.domain.Sort.by("id"))
+                : org.springframework.data.domain.Sort.by("category.title").ascending().and(org.springframework.data.domain.Sort.by("title")).and(org.springframework.data.domain.Sort.by("id"));
+        return subcategories.findAll(com.marzouki.shop.common.Specs.<Subcategory>text(query.like(), "title", "category.title"), query.pageRequest(sort));
+    }
+
     public List<Subcategory> findAll() {
         return subcategories.findAllByOrderByCategoryTitleAscTitleAsc();
     }

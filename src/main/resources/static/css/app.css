@@ -247,3 +247,6 @@ a.status-row:hover { color: var(--shop-accent); }
 .code-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; padding: 1rem; margin: 0;
     border: 1px solid var(--shop-line); border-radius: .75rem; background: var(--shop-surface); }
 .code-grid code { font-size: 1rem; letter-spacing: .08em; }
+
+/* Shop filters */
+.shop-filters .filter-more { cursor: pointer; width: fit-content; }

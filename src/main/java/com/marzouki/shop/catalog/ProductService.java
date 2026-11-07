@@ -33,6 +33,40 @@ public class ProductService {
         return all;
     }
 
+    /** One page of the shop: only active products, filtered and sorted as the customer chose. */
+    public org.springframework.data.domain.Page<Product> shop(ShopQuery query) {
+        org.springframework.data.domain.Sort sort = switch (query.getSort()) {
+            case "price-asc" -> org.springframework.data.domain.Sort.by("price").ascending().and(org.springframework.data.domain.Sort.by("id"));
+            case "price-desc" -> org.springframework.data.domain.Sort.by("price").descending().and(org.springframework.data.domain.Sort.by("id"));
+            case "newest" -> org.springframework.data.domain.Sort.by("createdAt").descending().and(org.springframework.data.domain.Sort.by("id").descending());
+            case "rating" -> org.springframework.data.domain.Sort.unsorted();
+            default -> org.springframework.data.domain.Sort.by("name").ascending().and(org.springframework.data.domain.Sort.by("id"));
+        };
+        var page = products.findAll(ProductSpecs.storefront(query),
+                org.springframework.data.domain.PageRequest.of(query.getPage(), ShopQuery.PAGE_SIZE, sort));
+        ProductViews.warm(page.getContent());
+        return page;
+    }
+
+    /** One page of the back-office product list. */
+    public org.springframework.data.domain.Page<Product> search(com.marzouki.shop.common.ListQuery query) {
+        org.springframework.data.domain.Sort sort = switch (query.getSort()) {
+            case "newest" -> org.springframework.data.domain.Sort.by("createdAt").descending().and(org.springframework.data.domain.Sort.by("id").descending());
+            case "sku" -> org.springframework.data.domain.Sort.by("sku").ascending();
+            case "price-asc" -> org.springframework.data.domain.Sort.by("price").ascending().and(org.springframework.data.domain.Sort.by("id"));
+            case "price-desc" -> org.springframework.data.domain.Sort.by("price").descending().and(org.springframework.data.domain.Sort.by("id"));
+            default -> org.springframework.data.domain.Sort.by("name").ascending().and(org.springframework.data.domain.Sort.by("id"));
+        };
+        var page = products.findAll(ProductSpecs.backOffice(query), query.pageRequest(sort));
+        ProductViews.warm(page.getContent());
+        page.forEach(p -> {
+            if (p.getProductType() != null) {
+                p.getProductType().getName();
+            }
+        });
+        return page;
+    }
+
     public Product get(Long id) {
         Product product = products.findWithDetailsById(id).orElseThrow(() -> new NotFoundException("Product", id));
         ProductViews.warm(List.of(product));

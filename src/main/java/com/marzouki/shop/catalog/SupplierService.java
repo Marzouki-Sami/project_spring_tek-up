@@ -18,6 +18,16 @@ public class SupplierService {
     private final ProductRepository products;
     private final CatalogMapper mapper;
 
+    public org.springframework.data.domain.Page<Supplier> search(com.marzouki.shop.common.ListQuery query) {
+        org.springframework.data.jpa.domain.Specification<Supplier> status = switch (query.getStatus()) {
+            case "ACTIVE" -> (r, q, cb) -> cb.isTrue(r.get("active"));
+            case "INACTIVE" -> (r, q, cb) -> cb.isFalse(r.get("active"));
+            default -> com.marzouki.shop.common.Specs.none();
+        };
+        return suppliers.findAll(com.marzouki.shop.common.Specs.<Supplier>text(query.like(), "company", "contactName", "email").and(status),
+                query.pageRequest(Sort.by("company").ascending().and(Sort.by("id"))));
+    }
+
     public List<Supplier> findAll() {
         return suppliers.findAll(Sort.by("company"));
     }

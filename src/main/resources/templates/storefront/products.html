@@ -5,28 +5,70 @@
 <nav th:replace="~{fragments/layout :: nav('shop')}"></nav>
 <main class="container">
     <h1 class="h3 mb-3">Shop</h1>
-    <form class="row g-2 mb-3" method="get" th:action="@{/products}">
-        <div class="col-12 col-md">
-            <input class="form-control" type="search" name="q" th:value="${q}" placeholder="Search products" aria-label="Search products">
+    <form class="shop-filters panel mb-4" method="get" th:action="@{/products}">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-lg-4">
+                <label class="form-label small mb-1" for="q">Search</label>
+                <input class="form-control" id="q" type="search" name="q" th:value="${query.q}" maxlength="80" placeholder="Search products">
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small mb-1" for="category">Category</label>
+                <select class="form-select" id="category" name="category" data-autosubmit>
+                    <option value="">All</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.title}" th:selected="${c.id == query.category}"></option>
+                </select>
+            </div>
+            <div class="col-6 col-lg-2" th:unless="${#lists.isEmpty(subcategories)}">
+                <label class="form-label small mb-1" for="subcategory">Type</label>
+                <select class="form-select" id="subcategory" name="subcategory" data-autosubmit>
+                    <option value="">All</option>
+                    <option th:each="s : ${subcategories}" th:value="${s.id}" th:text="${s.title}" th:selected="${s.id == query.subcategory}"></option>
+                </select>
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small mb-1" for="sort">Sort by</label>
+                <select class="form-select" id="sort" name="sort" data-autosubmit>
+                    <option value="name" th:selected="${query.sort == 'name'}">Name</option>
+                    <option value="price-asc" th:selected="${query.sort == 'price-asc'}">Price: low to high</option>
+                    <option value="price-desc" th:selected="${query.sort == 'price-desc'}">Price: high to low</option>
+                    <option value="rating" th:selected="${query.sort == 'rating'}">Best rated</option>
+                    <option value="newest" th:selected="${query.sort == 'newest'}">Newest</option>
+                </select>
+            </div>
         </div>
-        <div class="col-6 col-md-3">
-            <select class="form-select" name="category" aria-label="Category">
-                <option value="">All categories</option>
-                <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.title}" th:selected="${c.id == selectedCategory}"></option>
-            </select>
+        <details class="mt-3" th:attr="open=${query.minPrice != '' or query.maxPrice != '' or query.inStock or query.minRating > 0}">
+            <summary class="small text-secondary filter-more"><i class="bi bi-sliders2"></i> More filters</summary>
+            <div class="row g-3 align-items-end mt-1">
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label small mb-1" for="minPrice">Min price (€)</label>
+                    <input class="form-control" id="minPrice" name="minPrice" inputmode="decimal" th:value="${query.minPrice}" placeholder="0">
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label small mb-1" for="maxPrice">Max price (€)</label>
+                    <input class="form-control" id="maxPrice" name="maxPrice" inputmode="decimal" th:value="${query.maxPrice}" placeholder="Any">
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label small mb-1" for="minRating">Rating</label>
+                    <select class="form-select" id="minRating" name="minRating">
+                        <option value="0">Any</option>
+                        <option th:each="n : ${#numbers.sequence(4, 1, -1)}" th:value="${n}" th:selected="${n == query.minRating}" th:text="${n} + ' stars & up'">4 stars & up</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="inStock" name="inStock" value="true" th:checked="${query.inStock}">
+                        <label class="form-check-label" for="inStock">In stock only</label>
+                    </div>
+                </div>
+            </div>
+        </details>
+        <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Apply</button>
+            <a class="btn btn-outline-secondary" th:if="${query.filtered}" th:href="@{/products}">Clear filters</a>
         </div>
-        <div class="col-6 col-md-3">
-            <select class="form-select" name="sort" aria-label="Sort by">
-                <option value="name" th:selected="${sort == 'name'}">Name</option>
-                <option value="price-asc" th:selected="${sort == 'price-asc'}">Price: low to high</option>
-                <option value="price-desc" th:selected="${sort == 'price-desc'}">Price: high to low</option>
-                <option value="newest" th:selected="${sort == 'newest'}">Newest</option>
-            </select>
-        </div>
-        <div class="col-12 col-md-auto"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i> Search</button></div>
     </form>
     <p class="text-secondary" th:text="${page.totalElements} + (${page.totalElements == 1} ? ' product' : ' products')">0 products</p>
-    <p class="empty" th:if="${page.empty}">No products match your search.</p>
+    <p class="empty" th:if="${page.empty}">No products match your filters.</p>
     <div class="row g-4">
         <div class="col-6 col-md-4 col-lg-3" th:each="p : ${page.content}">
             <div th:replace="~{storefront/card :: card(${p})}"></div>
@@ -34,17 +76,14 @@
     </div>
     <nav class="mt-4" aria-label="Pages" th:if="${page.totalPages > 1}">
         <ul class="pagination justify-content-center">
-            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                <a class="page-link" th:href="@{/products(q=${q},category=${selectedCategory},sort=${sort},page=${page.number - 1})}">Previous</a>
-            </li>
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'"><a class="page-link" th:href="${links.to(page.number - 1)}">Previous</a></li>
             <li class="page-item disabled"><span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span></li>
-            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                <a class="page-link" th:href="@{/products(q=${q},category=${selectedCategory},sort=${sort},page=${page.number + 1})}">Next</a>
-            </li>
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'"><a class="page-link" th:href="${links.to(page.number + 1)}">Next</a></li>
         </ul>
     </nav>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
 </body>
 </html>

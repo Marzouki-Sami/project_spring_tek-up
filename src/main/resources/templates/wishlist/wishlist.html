@@ -6,12 +6,15 @@
 <div th:replace="~{fragments/layout :: flash}"></div>
 <main class="container">
     <h1 class="h3 mb-4">My wishlist</h1>
-    <div class="empty" th:if="${#lists.isEmpty(items)}">
-        <p class="mb-3">Nothing saved yet. Tap the heart on a product to keep it for later.</p>
+    <section class="panel p-0 mb-4" th:if="${!page.empty or !query.q.empty}">
+        <form th:replace="~{fragments/lists :: listbar('/account/wishlist', ${query}, null, ${sorts}, 'Search your wishlist')}"></form>
+    </section>
+    <div class="empty" th:if="${page.empty}">
+        <p class="mb-3" th:text="${query.q.empty} ? 'Nothing saved yet. Tap the heart on a product to keep it for later.' : 'Nothing on your wishlist matches.'">Nothing saved yet.</p>
         <a class="btn btn-primary" th:href="@{/products}">Browse the shop</a>
     </div>
     <div class="row g-4">
-        <div class="col-6 col-md-4 col-lg-3" th:each="item : ${items}">
+        <div class="col-6 col-md-4 col-lg-3" th:each="item : ${page.content}">
             <div th:replace="~{storefront/card :: card(${item.product})}"></div>
             <form class="mt-2" th:action="@{/wishlist/toggle}" method="post">
                 <input type="hidden" name="productId" th:value="${item.product.id}">
@@ -20,8 +23,15 @@
             </form>
         </div>
     </div>
-</main>
+    <nav class="mt-4" aria-label="Pages" th:if="${page.totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'"><a class="page-link" th:href="${links.to(page.number - 1)}">Previous</a></li>
+            <li class="page-item disabled"><span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 2</span></li>
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'"><a class="page-link" th:href="${links.to(page.number + 1)}">Next</a></li>
+        </ul>
+    </nav></main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
 </body>
 </html>

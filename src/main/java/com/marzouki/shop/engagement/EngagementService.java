@@ -75,6 +75,20 @@ public class EngagementService {
         return wishlist.existsByUserIdAndProductId(userId, productId);
     }
 
+    /** One page of the wishlist, sorted by when it was saved, name or price. */
+    public org.springframework.data.domain.Page<WishlistItem> wishlistPage(Long userId, com.marzouki.shop.common.ListQuery query) {
+        org.springframework.data.domain.Sort sort = switch (query.getSort()) {
+            case "name" -> org.springframework.data.domain.Sort.by("product.name").ascending().and(org.springframework.data.domain.Sort.by("id"));
+            case "price-asc" -> org.springframework.data.domain.Sort.by("product.price").ascending().and(org.springframework.data.domain.Sort.by("id"));
+            case "price-desc" -> org.springframework.data.domain.Sort.by("product.price").descending().and(org.springframework.data.domain.Sort.by("id"));
+            case "oldest" -> org.springframework.data.domain.Sort.by("createdAt").ascending().and(org.springframework.data.domain.Sort.by("id"));
+            default -> org.springframework.data.domain.Sort.by("createdAt").descending().and(org.springframework.data.domain.Sort.by("id").descending());
+        };
+        var page = wishlist.search(userId, query.like(), org.springframework.data.domain.PageRequest.of(query.getPage(), 12, sort));
+        com.marzouki.shop.catalog.ProductViews.warm(page.getContent().stream().map(WishlistItem::getProduct).toList());
+        return page;
+    }
+
     public List<WishlistItem> wishlistOf(Long userId) {
         List<WishlistItem> items = wishlist.findByUserIdOrderByCreatedAtDescIdDesc(userId);
         com.marzouki.shop.catalog.ProductViews.warm(items.stream().map(WishlistItem::getProduct).toList());

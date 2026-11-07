@@ -3,6 +3,7 @@ package com.marzouki.shop.order.web;
 import com.marzouki.shop.common.ConflictException;
 import com.marzouki.shop.order.OrderService;
 import com.marzouki.shop.security.AppUserDetails;
+import com.marzouki.shop.order.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -22,8 +23,17 @@ public class AccountOrderController {
     private final OrderService orders;
 
     @GetMapping
-    public String list(@AuthenticationPrincipal AppUserDetails me, Model model) {
-        model.addAttribute("orders", orders.forUser(me.getId()));
+    public String list(@AuthenticationPrincipal AppUserDetails me,
+                       @org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
+        model.addAttribute("page", orders.search(query, me.getId()));
+        model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/account/orders", query.params()));
+        java.util.List<String> pairs = new java.util.ArrayList<>(java.util.List.of("", "All orders"));
+        for (OrderStatus s : OrderStatus.values()) {
+            pairs.add(s.name());
+            pairs.add(s.getLabel());
+        }
+        model.addAttribute("statuses", com.marzouki.shop.common.ListQuery.choices(pairs.toArray(String[]::new)));
+        model.addAttribute("sorts", com.marzouki.shop.common.ListQuery.choices("", "Newest first", "oldest", "Oldest first", "total-desc", "Highest total", "total-asc", "Lowest total"));
         return "order/my-orders";
     }
 

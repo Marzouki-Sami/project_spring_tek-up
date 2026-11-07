@@ -4,6 +4,10 @@ import com.marzouki.shop.catalog.CategoryRepository;
 import com.marzouki.shop.catalog.Product;
 import com.marzouki.shop.catalog.ProductViews;
 import com.marzouki.shop.catalog.ProductRepository;
+import com.marzouki.shop.catalog.ProductService;
+import com.marzouki.shop.catalog.ShopQuery;
+import com.marzouki.shop.catalog.Subcategory;
+import com.marzouki.shop.catalog.SubcategoryRepository;
 import com.marzouki.shop.common.NotFoundException;
 import com.marzouki.shop.engagement.EngagementService;
 import com.marzouki.shop.engagement.dto.ReviewForm;
@@ -18,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /** The public shop window: anyone can browse, no account needed. */
@@ -28,6 +33,8 @@ public class StorefrontController {
     static final int PAGE_SIZE = 12;
 
     private final ProductRepository products;
+    private final ProductService productService;
+    private final SubcategoryRepository subcategoryRepository;
     private final CategoryRepository categories;
     private final EngagementService engagement;
     private final com.fasterxml.jackson.databind.ObjectMapper json;
@@ -44,28 +51,16 @@ public class StorefrontController {
 
     @GetMapping("/products")
     @Transactional(readOnly = true)
-    public String browse(@RequestParam(defaultValue = "") String q,
-                         @RequestParam(required = false) Long category,
-                         @RequestParam(defaultValue = "name") String sort,
-                         @RequestParam(defaultValue = "0") int page,
-                         Model model) {
-        Sort order = switch (sort) {
-            case "price-asc" -> Sort.by("price").ascending();
-            case "price-desc" -> Sort.by("price").descending();
-            case "newest" -> Sort.by("createdAt").descending().and(Sort.by("id").descending());
-            default -> Sort.by("name").ascending();
-        };
-        String text = q.trim();
-        Page<Product> result = products.search(text, category, PageRequest.of(Math.max(page, 0), PAGE_SIZE, order));
-        result.forEach(p -> ProductViews.warm(java.util.List.of(p)));
+    public String browse(@ModelAttribute("query") ShopQuery query, Model model) {
+        Page<Product> result = productService.shop(query);
         model.addAttribute("page", result);
-        model.addAttribute("q", text);
-        model.addAttribute("selectedCategory", category);
-        model.addAttribute("sort", sort);
+        model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/products", query.params()));
         model.addAttribute("categories", categories.findAllByOrderByTitleAsc());
+        model.addAttribute("subcategories", query.getCategory() == null ? java.util.List.<Subcategory>of()
+                : subcategoryRepository.findByCategoryIdOrderByTitleAsc(query.getCategory()));
+        model.addAttribute("sorts", ShopQuery.SORTS);
         return "storefront/products";
     }
-
     @GetMapping("/products/{id}")
     @Transactional(readOnly = true)
     public String detail(@PathVariable Long id, @AuthenticationPrincipal AppUserDetails me, Model model) {

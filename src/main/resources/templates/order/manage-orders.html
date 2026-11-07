@@ -6,27 +6,27 @@
 <div th:replace="~{fragments/layout :: flash}"></div>
 <main class="container">
     <h1 class="h3 mb-3">Orders</h1>
-    <div class="mb-3">
-        <a class="chip" th:classappend="${status == null} ? 'active'" th:href="@{/manage/orders}">All</a>
-        <a class="chip" th:each="s : ${statuses}" th:classappend="${s == status} ? 'active'" th:href="@{/manage/orders(status=${s})}" th:text="${s.label}">Status</a>
-    </div>
-    <p class="empty" th:if="${#lists.isEmpty(orders)}">No orders here.</p>
-    <div class="panel p-0 table-responsive" th:unless="${#lists.isEmpty(orders)}">
-        <table class="table table-hover mb-0">
-            <thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Status</th><th class="num">Total</th><th></th></tr></thead>
-            <tbody>
-                <tr th:each="o : ${orders}">
-                    <td th:text="'#' + ${o.id}">#1</td>
-                    <td th:text="${#temporals.format(o.createdAt, 'd MMM yyyy HH:mm')}">Date</td>
-                    <td th:text="${o.user.fullName}">Customer</td>
-                    <td><span class="badge" th:classappend="'text-bg-' + ${o.status.color}" th:text="${o.status.label}">Placed</span></td>
-                    <td class="num" th:text="${#numbers.formatDecimal(o.total, 1, 'COMMA', 2, 'POINT')} + ' €'">0</td>
-                    <td class="text-end"><a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/orders/{id}(id=${o.id})}">Open</a></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</main><footer th:replace="~{fragments/layout :: footer}"></footer>
+    <section class="panel p-0">
+        <form th:replace="~{fragments/lists :: listbar('/manage/orders', ${query}, ${statuses}, ${sorts}, 'Search by number, customer or city')}"></form>
+        <div class="table-scroll">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Status</th><th class="num">Total</th><th></th></tr></thead>
+                <tbody>
+                    <tr th:if="${page.empty}"><td colspan="6" class="empty">No orders match.</td></tr>
+                    <tr th:each="o : ${page.content}">
+                        <td th:text="'#' + ${o.id}">#1</td>
+                        <td th:text="${#temporals.format(o.createdAt, 'd MMM yyyy HH:mm')}">Date</td>
+                        <td th:text="${o.user.fullName}">Customer</td>
+                        <td><span class="badge" th:classappend="'text-bg-' + ${o.status.color}" th:text="${o.status.label}">Placed</span></td>
+                        <td class="num" th:text="${#numbers.formatDecimal(o.total, 1, 'COMMA', 2, 'POINT')} + ' €'">0</td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/orders/{id}(id=${o.id})}">Open</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:replace="~{fragments/lists :: pager(${page}, ${links})}"></div>
+    </section></main><footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
 </body>
 </html>

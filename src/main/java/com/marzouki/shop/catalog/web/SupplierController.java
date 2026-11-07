@@ -22,8 +22,10 @@ public class SupplierController {
     private final SupplierService suppliers;
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("suppliers", suppliers.findAll());
+    public String list(@org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
+        model.addAttribute("page", suppliers.search(query));
+        model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/manage/suppliers", query.params()));
+        model.addAttribute("statuses", com.marzouki.shop.common.ListQuery.choices("", "All suppliers", "ACTIVE", "Active", "INACTIVE", "Inactive"));
         return "supplier/list";
     }
 

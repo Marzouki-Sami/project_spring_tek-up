@@ -27,8 +27,13 @@ public class ProductController {
     private final com.marzouki.shop.catalog.ProductTypeService productTypes;
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("products", products.findAll());
+    public String list(@org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
+        model.addAttribute("page", products.search(query));
+        model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/manage/products", query.params()));
+        model.addAttribute("statuses", com.marzouki.shop.common.ListQuery.choices("", "All products", "ACTIVE", "Active",
+                "HIDDEN", "Hidden", "LOW", "Low stock", "OUT", "Sold out"));
+        model.addAttribute("sorts", com.marzouki.shop.common.ListQuery.choices("", "Name", "sku", "SKU", "newest", "Newest",
+                "price-asc", "Price: low to high", "price-desc", "Price: high to low"));
         return "product/list";
     }
 

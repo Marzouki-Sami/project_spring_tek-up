@@ -8,8 +8,13 @@ into a tested, containerised application.
 
 ## Features
 
-- **Storefront**: guests browse, search, filter and sort products without an account. Light and dark
-  theme that follows the system setting.
+- **Storefront**: guests browse, search, filter and sort products without an account: category and
+  type, price range, in stock only, minimum rating, and sorting by name, price, newest or best rated.
+  Light and dark theme that follows the system setting.
+- **Lists that scale**: every back-office list (products, orders, customers, users, coupons, suppliers,
+  categories, subcategories, audit log) and the customer's own orders and wishlist are searched,
+  filtered, sorted and paged in the database, with page sizes capped at 100 and search text escaped.
+  Pages are checked by tests that count SQL statements so a list never costs one query per row.
 - **Products, options and variants**: a *product type* (for example Clothing) lists which *options* its
   products come in (Size, Color). Options are shared and their values are managed once, so a manager
   never re-enters them per product. Tick the values a product is sold in and every missing

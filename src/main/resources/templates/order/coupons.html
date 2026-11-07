@@ -31,12 +31,14 @@
             <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">Create</button></div>
         </div>
     </form>
-    <p class="empty" th:if="${#lists.isEmpty(coupons)}">No coupons yet.</p>
-    <div class="panel p-0 table-responsive" th:unless="${#lists.isEmpty(coupons)}">
-        <table class="table table-hover mb-0">
+    <section class="panel p-0">
+        <form th:replace="~{fragments/lists :: listbar('/manage/coupons', ${query}, ${statuses}, ${sorts}, 'Search by code')}"></form>
+        <div class="table-scroll">
+        <table class="table table-hover align-middle mb-0">
             <thead><tr><th>Code</th><th class="num">Discount</th><th>Valid until</th><th class="num">Used</th><th>Status</th><th></th></tr></thead>
             <tbody>
-                <tr th:each="c : ${coupons}">
+                <tr th:if="${page.empty}"><td colspan="6" class="empty">No coupons match.</td></tr>
+                <tr th:each="c : ${page.content}">
                     <td><code th:text="${c.code}">CODE</code></td>
                     <td class="num" th:text="${c.percentOff} + '%'">10%</td>
                     <td th:text="${c.expiresAt != null} ? ${#temporals.format(c.expiresAt, 'd MMM yyyy')} : 'No expiry'">-</td>
@@ -54,8 +56,11 @@
                 </tr>
             </tbody>
         </table>
-    </div>
+        </div>
+        <div th:replace="~{fragments/lists :: pager(${page}, ${links})}"></div>
+    </section>
 </main><footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
 </body>
 </html>

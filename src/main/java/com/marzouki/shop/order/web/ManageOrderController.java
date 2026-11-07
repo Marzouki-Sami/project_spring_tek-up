@@ -21,10 +21,16 @@ public class ManageOrderController {
     private final OrderService orders;
 
     @GetMapping
-    public String list(@RequestParam(required = false) OrderStatus status, Model model) {
-        model.addAttribute("orders", orders.all(status));
-        model.addAttribute("statuses", OrderStatus.values());
-        model.addAttribute("status", status);
+    public String list(@org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
+        model.addAttribute("page", orders.search(query));
+        model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/manage/orders", query.params()));
+        java.util.List<String> pairs = new java.util.ArrayList<>(java.util.List.of("", "All orders"));
+        for (OrderStatus s : OrderStatus.values()) {
+            pairs.add(s.name());
+            pairs.add(s.getLabel());
+        }
+        model.addAttribute("statuses", com.marzouki.shop.common.ListQuery.choices(pairs.toArray(String[]::new)));
+        model.addAttribute("sorts", com.marzouki.shop.common.ListQuery.choices("", "Newest first", "oldest", "Oldest first", "total-desc", "Highest total", "total-asc", "Lowest total"));
         return "order/manage-orders";
     }
 
