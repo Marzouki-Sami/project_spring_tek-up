@@ -56,6 +56,21 @@ public class ApiExceptionHandler {
         return detail;
     }
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    ProblemDetail status(org.springframework.web.server.ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        return problem(status, status.getReasonPhrase(), ex.getReason() == null ? status.getReasonPhrase() : ex.getReason());
+    }
+
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    ProblemDetail constraints(jakarta.validation.ConstraintViolationException ex) {
+        ProblemDetail detail = problem(HttpStatus.BAD_REQUEST, "Validation failed", "The request is not valid");
+        Map<String, String> errors = new LinkedHashMap<>();
+        ex.getConstraintViolations().forEach(v -> errors.putIfAbsent(v.getPropertyPath().toString(), v.getMessage()));
+        detail.setProperty("errors", errors);
+        return detail;
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ProblemDetail unreadable() {
         return problem(HttpStatus.BAD_REQUEST, "Bad request", "The request body is missing or malformed");
