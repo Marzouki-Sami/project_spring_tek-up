@@ -4,8 +4,6 @@
 <body>
 <nav th:replace="~{fragments/layout :: nav('')}"></nav>
 <main class="container">
-    <div class="alert alert-success" role="status" th:if="${param.welcome}">Welcome! Your account is ready.</div>
-    <div class="alert alert-info" role="status" th:if="${param.signedOut}">You have been signed out.</div>
     <section class="hero">
         <h1>Good things, simply delivered.</h1>
         <p class="lead mb-4">Browse the catalogue without an account. Create one only when you are ready to check out.</p>

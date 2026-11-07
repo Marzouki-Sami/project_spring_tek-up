@@ -142,7 +142,7 @@ class EmailFlowTest {
         SENT.clear();
 
         mvc.perform(post("/forgot-password").with(csrf()).param("email", "nobody@example.com"))
-                .andExpect(redirectedUrl("/login")).andExpect(flash().attributeExists("success"));
+                .andExpect(redirectedUrl("/login")).andExpect(flash().attributeExists("info"));
         assertThat(SENT).isEmpty();
 
         mvc.perform(post("/forgot-password").with(csrf()).param("email", "CY@example.com"))

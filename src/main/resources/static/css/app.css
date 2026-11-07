@@ -178,3 +178,14 @@ a.status-row:hover { color: var(--shop-accent); }
 .gallery-thumb:hover { opacity: 1; }
 .gallery-thumb.active { opacity: 1; border-color: var(--shop-accent); }
 .gallery-counter { position: absolute; right: .75rem; bottom: .75rem; z-index: 2; padding: .15rem .6rem; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; font-size: .8rem; }
+/* Toasts */
+.toast-container { z-index: 1090; max-width: 100%; }
+.app-toast { --toast-accent: var(--shop-accent); width: 24rem; max-width: calc(100vw - 2rem); border: 1px solid var(--shop-line); border-left: 4px solid var(--toast-accent);
+    border-radius: .75rem; background: var(--shop-surface); color: var(--bs-body-color); box-shadow: 0 .75rem 2rem rgba(20, 20, 50, .18); }
+[data-bs-theme="dark"] .app-toast { box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .5); }
+.app-toast-icon { color: var(--toast-accent); font-size: 1.15rem; line-height: 1.4; }
+.app-toast-success { --toast-accent: #198754; }
+.app-toast-info { --toast-accent: #0d8bd6; }
+.app-toast-warning { --toast-accent: #e08a00; }
+.app-toast-error { --toast-accent: #dc3545; }
+.app-toast .btn-close { font-size: .7rem; margin-top: .25rem; }

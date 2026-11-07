@@ -31,8 +31,14 @@ public class CartController {
     public String add(@RequestParam Long variantId, @RequestParam(defaultValue = "1") int quantity,
                       RedirectAttributes flash) {
         try {
+            int before = cart.quantityOf(variantId);
             carts.add(cart, variantId, quantity);
-            flash.addFlashAttribute("success", "Added to your cart");
+            int now = cart.quantityOf(variantId);
+            if (now < before + Math.max(quantity, 1)) {
+                flash.addFlashAttribute("warning", "Only " + now + " available, so that is all your cart holds now");
+            } else {
+                flash.addFlashAttribute("success", "Added to your cart");
+            }
         } catch (ConflictException e) {
             flash.addFlashAttribute("error", e.getMessage());
         }

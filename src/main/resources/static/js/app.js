@@ -29,3 +29,43 @@ document.querySelectorAll('[data-color]').forEach(function (element) {
         });
     });
 })();
+// Toast notifications. The server renders its messages into #toast-area; this shows them, and
+// window.shopToast(kind, message) lets scripts raise the same kind of message (success, info, warning, error).
+(function () {
+    var area = document.getElementById('toast-area');
+    if (!area || !window.bootstrap) { return; }
+
+    function show(element) {
+        element.addEventListener('hidden.bs.toast', function () { element.remove(); });
+        window.bootstrap.Toast.getOrCreateInstance(element).show();
+    }
+
+    area.querySelectorAll('.toast').forEach(show);
+
+    var icons = { success: 'bi-check-circle-fill', info: 'bi-info-circle-fill',
+        warning: 'bi-exclamation-triangle-fill', error: 'bi-x-octagon-fill' };
+    var delays = { success: 4000, info: 5000, warning: 7000, error: 9000 };
+
+    window.shopToast = function (kind, message) {
+        var toast = document.createElement('div');
+        toast.className = 'toast app-toast app-toast-' + kind;
+        toast.setAttribute('role', kind === 'error' || kind === 'warning' ? 'alert' : 'status');
+        toast.setAttribute('data-bs-delay', String(delays[kind] || 5000));
+        var body = document.createElement('div');
+        body.className = 'toast-body d-flex align-items-start gap-2';
+        var icon = document.createElement('i');
+        icon.className = 'bi app-toast-icon ' + (icons[kind] || icons.info);
+        var text = document.createElement('span');
+        text.className = 'flex-grow-1';
+        text.textContent = message;
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'btn-close';
+        close.setAttribute('data-bs-dismiss', 'toast');
+        close.setAttribute('aria-label', 'Close');
+        body.append(icon, text, close);
+        toast.append(body);
+        area.append(toast);
+        show(toast);
+    };
+})();

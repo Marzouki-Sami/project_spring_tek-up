@@ -5,7 +5,6 @@
 <nav th:replace="~{fragments/layout :: nav(${manager} ? 'orders' : 'account')}"></nav>
 <div th:replace="~{fragments/layout :: flash}"></div>
 <main class="container">
-    <div class="alert alert-success" role="status" th:if="${param.placed}"><i class="bi bi-check-circle"></i> Thank you! Your order was placed.</div>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a th:href="${manager} ? @{/manage/orders} : @{/account/orders}" th:text="${manager} ? 'Orders' : 'My orders'">Orders</a></li>
