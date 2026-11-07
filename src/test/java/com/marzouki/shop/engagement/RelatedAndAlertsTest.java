@@ -258,7 +258,7 @@ class RelatedAndAlertsTest {
         stock.adjust(lampVariant, 10, StockMovement.Reason.SUPPLIER_DELIVERY, null);
         assertThat(SENT).isEmpty();
 
-        jdbc.update("update stock_alert_log set sent_at = dateadd('DAY', -8, sent_at)");
+        jdbc.update("update stock_alert_log set sent_at = ?", java.sql.Timestamp.from(java.time.Instant.now().minus(8, java.time.temporal.ChronoUnit.DAYS)));
         stock.adjust(lampVariant, -10, StockMovement.Reason.DAMAGED, null);
         stock.adjust(lampVariant, 10, StockMovement.Reason.SUPPLIER_DELIVERY, null);
         assertThat(SENT).hasSize(2);
