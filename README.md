@@ -50,8 +50,13 @@ into a tested, containerised application.
   (also manages users at `/admin/users`); each role inherits what the roles below it can do.
 - **Email**: confirmation, password reset, order confirmation, shipping notice and a low-stock alert
   to managers. Links are single-use and stored only as hashes. By default emails are saved as text
-  files in `mail-outbox/` instead of being sent.
-- **REST API** (`/api`, interactive docs at `/api/docs`): public catalog search, manager-only product
+  files in `mail-outbox/` instead of being sent. Admins edit the wording of every email at
+  `/admin/emails` (plain text with `{{placeholders}}`, live preview, a test email to yourself and a
+  one-click return to the original); nothing is ever executed or rendered as markup, and unknown
+  placeholders are refused. Name, accent colour, footer and support address come from
+  `/admin/settings`. A per-address cooldown (`MAIL_COOLDOWN`, default 60s) keeps the sign-up and reset
+  forms from being used to flood someone. Staff can switch low-stock emails off in their profile, and
+  each product can set its own low-stock level.- **REST API** (`/api`, interactive docs at `/api/docs`): public catalog search, manager-only product
   changes, and register, log in, refresh and log out with short-lived JWT access tokens and rotating
   refresh tokens.
 - **Orders API**: POST /api/orders places an order from a list of variants, a coupon and either a saved

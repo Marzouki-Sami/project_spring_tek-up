@@ -60,7 +60,7 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     @Query("select distinct v from ProductVariant v join fetch v.product p left join fetch v.optionValues ov "
             + "left join fetch ov.optionType where v.active = true and p.active = true "
-            + "and v.stock <= :level order by v.stock asc, p.name asc")
+            + "and v.stock <= coalesce(p.lowStockThreshold, :level) order by v.stock asc, p.name asc")
     List<ProductVariant> lowStock(@Param("level") int level, Pageable limit);
 
     /** Takes stock only if enough is left, in one atomic statement so two buyers can never oversell. */

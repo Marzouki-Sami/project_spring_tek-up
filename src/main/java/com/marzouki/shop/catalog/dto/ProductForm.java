@@ -38,6 +38,11 @@ public class ProductForm {
 
     private boolean active = true;
 
+    /** Optional: stock at or below which this item counts as low. Empty uses the shop default. */
+    @Min(value = 0, message = "The threshold cannot be negative")
+    @jakarta.validation.constraints.Max(value = 100000, message = "That threshold is too large")
+    private Integer lowStockThreshold;
+
     @NotNull(message = "Choose a subcategory")
     private Long subcategoryId;
 

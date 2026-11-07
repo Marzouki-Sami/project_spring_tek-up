@@ -21,4 +21,6 @@ public interface UserRepository extends JpaRepository<User, Long>,
     int claimTotpStep(@org.springframework.data.repository.query.Param("id") Long id, @org.springframework.data.repository.query.Param("step") long step);
 
     java.util.List<User> findByRoleInAndEnabledTrue(java.util.Collection<Role> roles);
+
+    java.util.List<User> findByRoleInAndEnabledTrueAndLowStockAlertsTrue(java.util.Collection<Role> roles);
 }

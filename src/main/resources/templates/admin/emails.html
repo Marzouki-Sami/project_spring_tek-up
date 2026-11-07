@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Emails')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('emails')}"></nav>
+<main class="container">
+    <h1 class="h3 mb-1">Emails</h1>
+    <p class="text-secondary mb-4">The wording of every message the shop sends. Branding (name, colour, footer) is set in <a th:href="@{/admin/settings}">Settings</a>.</p>
+    <div class="row g-3">
+        <div class="col-md-6" th:each="entry : ${kinds}">
+            <a class="panel email-card d-block text-decoration-none h-100" th:href="@{/admin/emails/{key}(key=${entry.key.key})}">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                    <h2 class="h6 mb-0 text-body" th:text="${entry.key.label}">Email</h2>
+                    <span class="badge" th:classappend="${entry.value} ? 'text-bg-primary' : 'text-bg-secondary'" th:text="${entry.value} ? 'Edited' : 'Original'">Original</span>
+                </div>
+                <p class="small text-secondary mb-0" th:text="${entry.key.description}">When it is sent</p>
+            </a>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

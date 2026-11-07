@@ -21,4 +21,7 @@ public class ProfileForm {
     @Size(max = 30, message = "Use at most 30 characters")
     @Pattern(regexp = "[0-9+()\\-. ]*", message = "Use digits, spaces and + ( ) - . only")
     private String phone;
+
+    /** Only shown to managers and admins. */
+    private boolean lowStockAlerts = true;
 }

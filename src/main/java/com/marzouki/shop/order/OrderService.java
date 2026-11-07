@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
 
     /** At or below this many units a product triggers a low-stock alert. */
-    public static final int LOW_STOCK_LEVEL = 5;
+    public static final int LOW_STOCK_LEVEL = com.marzouki.shop.catalog.Product.DEFAULT_LOW_STOCK;
 
     private final OrderRepository orders;
     private final ProductVariantRepository variantRepository;
@@ -78,7 +78,8 @@ public class OrderService {
                 throw new ConflictException("Sorry, " + line.product().getName() + " just went out of stock");
             }
             int before = variant.getStock();
-            if (before > LOW_STOCK_LEVEL && before - line.quantity() <= LOW_STOCK_LEVEL) {
+            int level = line.product().getLowStockLevel();
+            if (before > level && before - line.quantity() <= level) {
                 events.publishEvent(new OrderEvents.LowStock(variant.getId()));
             }
             OrderItem item = new OrderItem();

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Edit email')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('emails')}"></nav>
+<main class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/admin/emails}">Emails</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${kind.label}">Email</li>
+        </ol>
+    </nav>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+        <div>
+            <h1 class="h3 mb-1" th:text="${kind.label}">Email</h1>
+            <p class="text-secondary mb-0" th:text="${kind.description}">When it is sent</p>
+        </div>
+        <span class="badge" th:classappend="${custom} ? 'text-bg-primary' : 'text-bg-secondary'" th:text="${custom} ? 'Edited' : 'Original wording'">Original</span>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <form class="panel" th:action="@{/admin/emails/{key}(key=${kind.key})}" th:object="${form}" method="post" novalidate>
+                <div class="alert alert-danger" role="alert" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="subject">Subject</label>
+                    <input class="form-control" id="subject" th:field="*{subject}" th:errorclass="is-invalid" data-insert-target>
+                    <div class="invalid-feedback" th:errors="*{subject}"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="heading">Heading</label>
+                    <input class="form-control" id="heading" th:field="*{heading}" th:errorclass="is-invalid" data-insert-target>
+                    <div class="invalid-feedback" th:errors="*{heading}"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="body">Message</label>
+                    <textarea class="form-control" id="body" rows="8" th:field="*{body}" th:errorclass="is-invalid" data-insert-target></textarea>
+                    <div class="invalid-feedback" th:errors="*{body}"></div>
+                    <div class="form-text">Leave a blank line between paragraphs. Plain text only.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="buttonLabel">Button text <span class="text-secondary">(optional)</span></label>
+                    <input class="form-control" id="buttonLabel" th:field="*{buttonLabel}" th:errorclass="is-invalid" data-insert-target>
+                    <div class="invalid-feedback" th:errors="*{buttonLabel}"></div>
+                </div>
+                <div class="mb-4">
+                    <span class="form-label d-block">Placeholders <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Click one to add it where the cursor is. Each is replaced with the real value when the email is sent."></i></span>
+                    <button class="btn btn-sm btn-outline-secondary me-1 mb-1" type="button" th:each="p : ${kind.placeholders}" th:attr="data-insert='{{' + ${p} + '}}'" th:text="'{{' + ${p} + '}}'">{{name}}</button>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                    <button class="btn btn-outline-secondary" type="submit" th:formaction="@{/admin/emails/{key}/preview(key=${kind.key})}" formnovalidate>Preview</button>
+                </div>
+            </form>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <form th:action="@{/admin/emails/{key}/test(key=${kind.key})}" method="post"><button class="btn btn-sm btn-outline-secondary" type="submit" data-bs-toggle="tooltip" title="Sends the saved wording with sample data to your own address"><i class="bi bi-send"></i> Send me a test</button></form>
+                <form th:action="@{/admin/emails/{key}/reset(key=${kind.key})}" method="post" th:if="${custom}" data-confirm="Go back to the original wording?"><button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-arrow-counterclockwise"></i> Use the original</button></form>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="mail-preview" aria-label="Preview">
+                <p class="small text-secondary mb-2">Preview with sample data</p>
+                <div class="mail-subject"><span class="text-secondary">Subject:</span> <strong th:text="${preview.subject}">Subject</strong></div>
+                <div class="mail-card">
+                    <p class="mail-brand" th:text="${shopName}">Shop</p>
+                    <h2 class="h5 mb-3" th:text="${preview.heading}">Heading</h2>
+                    <p th:each="p : ${preview.paragraphs}" th:text="${p}" class="mail-paragraph">Message</p>
+                    <span class="mail-button" th:attr="data-color=${accent}" th:if="${!preview.buttonLabel.empty}" th:text="${preview.buttonLabel}">Open</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
+</body>
+</html>

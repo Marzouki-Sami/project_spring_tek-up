@@ -38,6 +38,24 @@
         sync();
     });
 
+    // Insert a placeholder such as {{name}} into the field that was edited last.
+    var lastField = null;
+    document.querySelectorAll('[data-insert-target]').forEach(function (field) {
+        field.addEventListener('focus', function () { lastField = field; });
+    });
+    document.querySelectorAll('[data-insert]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var field = lastField || document.querySelector('[data-insert-target]');
+            if (!field) { return; }
+            var start = field.selectionStart == null ? field.value.length : field.selectionStart;
+            var end = field.selectionEnd == null ? start : field.selectionEnd;
+            var text = button.getAttribute('data-insert');
+            field.value = field.value.slice(0, start) + text + field.value.slice(end);
+            field.focus();
+            field.setSelectionRange(start + text.length, start + text.length);
+        });
+    });
+
     // Copy the text of an element (recovery codes) to the clipboard.
     document.querySelectorAll('[data-copy]').forEach(function (button) {
         button.addEventListener('click', function () {
