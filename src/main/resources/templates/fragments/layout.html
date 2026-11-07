@@ -41,8 +41,9 @@
                     <a class="nav-link" th:classappend="${active == 'users'} ? 'active'" th:href="@{/admin/users}">Users</a>
                 </li>
             </ul>
-            <a class="cart-link me-2" th:href="@{/cart}" aria-label="Shopping cart"><i class="bi bi-cart3"></i><span class="cart-count" th:if="${cartCount > 0}" th:text="${cartCount}">2</span></a>
-            <button type="button" class="theme-toggle me-2" data-theme-toggle aria-label="Switch between light and dark mode" title="Switch theme"><i class="bi bi-circle-half"></i></button>
+            <div class="nav-actions d-flex flex-wrap align-items-center gap-2">
+            <a class="cart-link" th:href="@{/cart}" aria-label="Shopping cart"><i class="bi bi-cart3"></i><span class="cart-count" th:if="${cartCount > 0}" th:text="${cartCount}">2</span></a>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark mode" title="Switch theme"><i class="bi bi-circle-half"></i></button>
             <div class="d-flex align-items-center gap-2" sec:authorize="!isAuthenticated()">
                 <a class="btn btn-link nav-signin" th:href="@{/login}">Sign in</a>
                 <a class="btn btn-primary btn-sm" th:href="@{/register}">Create account</a>
@@ -63,6 +64,7 @@
                         </form>
                     </li>
                 </ul>
+            </div>
             </div>
         </div>
     </div>

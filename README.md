@@ -10,7 +10,18 @@ into a tested, containerised application.
 
 - **Storefront**: guests browse, search, filter and sort products without an account. Light and dark
   theme that follows the system setting.
-- **Cart**: guests can fill a basket and keep it through sign-in; it is lost when the session ends.
+- **Products, options and variants**: a *product type* (for example Clothing) lists which *options* its
+  products come in (Size, Color). Options are shared and their values are managed once, so a manager
+  never re-enters them per product. Tick the values a product is sold in and every missing
+  combination becomes a variant with its own SKU, price override, stock and active flag. A unique key
+  on the combination makes duplicates impossible, even with two managers working at once.
+  The variants page (`/manage/products/{id}/variants`) pages, searches and filters on the server,
+  scrolls with a sticky header, and offers bulk actions on ticked rows or on everything a search
+  matches: set or clear a price, add or remove stock (logged), activate, deactivate, delete (ordered
+  variants are protected). Missing option values can be added in place. SKUs are suggested from the
+  product name and options and can be edited.
+- **Product images**: several pictures per product, shown as a carousel with a primary picture.
+- **Notifications**: success, info, warning and error messages appear as toasts at the bottom right.- **Cart**: guests can fill a basket and keep it through sign-in; it is lost when the session ends.
   Checkout needs an account. A signed-in customer's basket is saved and follows them across devices
   (baskets idle for 60 days are cleaned up).
 - **Address book and map** (`/account/addresses`): save up to ten delivery addresses. In the form and

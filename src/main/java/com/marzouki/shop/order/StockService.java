@@ -32,9 +32,22 @@ public class StockService {
             throw new ConflictException("Enter a change other than zero");
         }
         ProductVariant variant = variants.findById(variantId).orElseThrow(() -> new NotFoundException("Variant", variantId));
+        if (!apply(variant, delta, reason, note)) {
+            throw new ConflictException("Only " + variant.getStock() + " in stock, so that many cannot be removed");
+        }
+    }
+
+    /** Like {@link #adjust} but returns false instead of failing when the stock would drop below zero. */
+    @Transactional
+    public boolean tryAdjust(ProductVariant variant, int delta, StockMovement.Reason reason, String note) {
+        return delta != 0 && apply(variant, delta, reason, note);
+    }
+
+    private boolean apply(ProductVariant variant, int delta, StockMovement.Reason reason, String note) {
+        Long variantId = variant.getId();
         int before = variant.getStock();
         if (variants.adjust(variantId, delta) == 0) {
-            throw new ConflictException("Only " + before + " in stock, so that many cannot be removed");
+            return false;
         }
         entityManager.refresh(variant);
         StockMovement movement = new StockMovement(variant.getProduct().getId(), variantId, delta, reason, null);
@@ -46,6 +59,7 @@ public class StockService {
         if (before == 0 && before + delta > 0) {
             events.publishEvent(new OrderEvents.BackInStock(variantId));
         }
+        return true;
     }
 
     public Page<StockMovement> history(Long variantId, int page) {

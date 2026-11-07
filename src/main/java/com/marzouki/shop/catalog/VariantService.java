@@ -1,9 +1,14 @@
 package com.marzouki.shop.catalog;
 
+import com.marzouki.shop.catalog.dto.BulkVariantForm;
+import com.marzouki.shop.catalog.dto.OptionValueForm;
 import com.marzouki.shop.catalog.dto.VariantForm;
 import com.marzouki.shop.common.ConflictException;
 import com.marzouki.shop.common.NotFoundException;
 import com.marzouki.shop.order.OrderItemRepository;
+import com.marzouki.shop.order.OrderService;
+import com.marzouki.shop.order.StockMovement;
+import com.marzouki.shop.order.StockService;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -11,6 +16,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,17 +28,61 @@ import org.springframework.transaction.annotation.Transactional;
 public class VariantService {
 
     static final int MAX_COMBINATIONS = 200;
+    static final int MAX_BULK = 1000;
 
     private final ProductRepository products;
     private final ProductVariantRepository variants;
     private final ProductTypeRepository types;
     private final OrderItemRepository orderItems;
+    private final StockService stock;
+    private final OptionService options;
 
+    /** The product with its type, without loading every variant. */
+    public Product product(Long productId) {
+        Product product = products.findById(productId).orElseThrow(() -> new NotFoundException("Product", productId));
+        if (product.getProductType() != null) {
+            product.getProductType().getName();
+        }
+        return product;
+    }
+
+    /** The product with every variant and its options loaded; for jobs that work on all of them. */
     public Product productWithVariants(Long productId) {
         Product product = products.findWithDetailsById(productId)
                 .orElseThrow(() -> new NotFoundException("Product", productId));
         product.getVariants().forEach(v -> v.getOptionValues().forEach(o -> o.getOptionType().getName()));
         return product;
+    }
+
+    /** One page of a product's variants plus the totals shown above the table. */
+    public record Overview(Page<ProductVariant> page, long totalVariants, long sellableStock) {
+    }
+
+    public Overview overview(Long productId, VariantQuery query) {
+        Page<ProductVariant> page = search(productId, query, query.getPage());
+        if (page.getTotalPages() > 0 && query.getPage() >= page.getTotalPages()) {
+            page = search(productId, query, page.getTotalPages() - 1);
+        }
+        page.forEach(v -> v.getOptionValues().forEach(o -> o.getOptionType().getName()));
+        return new Overview(page, variants.countByProductId(productId), variants.sellableStock(productId));
+    }
+
+    private Page<ProductVariant> search(Long productId, VariantQuery query, int pageNumber) {
+        Filter f = Filter.of(query.getStatus());
+        return variants.search(productId, f.actives(), f.minStock(), f.maxStock(), query.likePattern(),
+                PageRequest.of(pageNumber, query.getSize()));
+    }
+
+    private record Filter(List<Boolean> actives, int minStock, int maxStock) {
+        static Filter of(VariantQuery.Status status) {
+            return switch (status) {
+                case ACTIVE -> new Filter(List.of(true), 0, Integer.MAX_VALUE);
+                case INACTIVE -> new Filter(List.of(false), 0, Integer.MAX_VALUE);
+                case LOW -> new Filter(List.of(true), 1, OrderService.LOW_STOCK_LEVEL);
+                case OUT -> new Filter(List.of(true, false), 0, 0);
+                default -> new Filter(List.of(true, false), 0, Integer.MAX_VALUE);
+            };
+        }
     }
 
     /** The option types (with all their values) the product's type allows. */
@@ -41,7 +92,6 @@ public class VariantService {
         }
         return types.findWithOptionsById(product.getProductType().getId()).orElseThrow().getOptionTypes();
     }
-
     public ProductVariant getForStock(Long variantId) {
         return variants.findWithDetailsById(variantId).orElseThrow(() -> new NotFoundException("Variant", variantId));
     }
@@ -67,7 +117,7 @@ public class VariantService {
 
     @Transactional
     public Generated generate(Long productId, Map<Long, Set<Long>> chosen) {
-        Product product = productWithVariants(productId);
+        Product product = product(productId);
         if (!product.isOptioned()) {
             throw new ConflictException("This product has no type, so it has no options to combine");
         }
@@ -85,14 +135,12 @@ public class VariantService {
             throw new ConflictException("That would create " + total + " variants; the limit is " + MAX_COMBINATIONS);
         }
 
-        Set<Set<Long>> existing = product.getVariants().stream()
-                .map(v -> v.getOptionValues().stream().map(OptionValue::getId).collect(Collectors.toSet()))
-                .collect(Collectors.toSet());
+        Set<String> existing = product.getVariants().stream().map(ProductVariant::getOptionKey).collect(Collectors.toSet());
         int created = 0;
         int skipped = 0;
         for (List<OptionValue> combo : combinations(lists)) {
-            Set<Long> key = combo.stream().map(OptionValue::getId).collect(Collectors.toSet());
-            if (existing.contains(key)) {
+            String key = combo.stream().map(OptionValue::getId).sorted().map(String::valueOf).collect(Collectors.joining("-"));
+            if (!existing.add(key)) {
                 skipped++;
                 continue;
             }
@@ -101,6 +149,16 @@ public class VariantService {
             created++;
         }
         return new Generated(created, skipped);
+    }
+
+    /** Adds a value to one of the option types the product's own type allows. */
+    @Transactional
+    public OptionValue addValue(Long productId, Long optionTypeId, OptionValueForm form) {
+        Product product = product(productId);
+        if (allowedOptions(product).stream().noneMatch(t -> t.getId().equals(optionTypeId))) {
+            throw new ConflictException("This product's type does not offer that option");
+        }
+        return options.addValue(optionTypeId, form);
     }
 
     @Transactional
@@ -130,7 +188,7 @@ public class VariantService {
     }
 
     private String freeSku(String base, List<OptionValue> combo) {
-        String suffix = combo.stream().map(v -> v.getLabel().toUpperCase().replaceAll("[^A-Z0-9]+", ""))
+        String suffix = combo.stream().map(v -> Skus.fromText(v.getLabel(), 20).replace("-", ""))
                 .filter(s -> !s.isEmpty()).collect(Collectors.joining("-"));
         String candidate = trim(base + (suffix.isEmpty() ? "" : "-" + suffix), 60);
         int counter = 2;
@@ -163,13 +221,94 @@ public class VariantService {
     }
 
     /** Used by the page to preselect the values that already have variants. */
-    public Map<Long, Set<Long>> usedValues(Product product) {
+    public Map<Long, Set<Long>> usedValues(Long productId) {
         Map<Long, Set<Long>> used = new java.util.HashMap<>();
-        for (ProductVariant variant : product.getVariants()) {
-            for (OptionValue value : variant.getOptionValues()) {
-                used.computeIfAbsent(value.getOptionType().getId(), k -> new LinkedHashSet<>()).add(value.getId());
-            }
+        for (Object[] row : variants.usedValueIds(productId)) {
+            used.computeIfAbsent((Long) row[0], k -> new LinkedHashSet<>()).add((Long) row[1]);
         }
         return used;
+    }
+
+    /** What a bulk action did: how many variants changed and how many were left alone, with the reason. */
+    public record BulkResult(int changed, int skipped, String skippedReason) {
+    }
+
+    @Transactional
+    public BulkResult bulk(Long productId, VariantQuery query, BulkVariantForm form) {
+        Product product = product(productId);
+        if (form.getAction() == null) {
+            throw new ConflictException("Choose what to do");
+        }
+        List<ProductVariant> targets = targets(productId, query, form);
+        if (targets.isEmpty()) {
+            throw new ConflictException("No variants selected");
+        }
+        return switch (form.getAction()) {
+            case ACTIVATE -> setActive(targets, true);
+            case DEACTIVATE -> setActive(targets, false);
+            case SET_PRICE -> {
+                if (form.getPrice() == null) {
+                    throw new ConflictException("Enter the price to apply");
+                }
+                targets.forEach(v -> v.setPrice(form.getPrice()));
+                yield new BulkResult(targets.size(), 0, null);
+            }
+            case CLEAR_PRICE -> {
+                targets.forEach(v -> v.setPrice(null));
+                yield new BulkResult(targets.size(), 0, null);
+            }
+            case ADJUST_STOCK -> adjustStock(targets, form);
+            case DELETE -> delete(product, targets);
+        };
+    }
+
+    private List<ProductVariant> targets(Long productId, VariantQuery query, BulkVariantForm form) {
+        if (form.getScope() == BulkVariantForm.Scope.FILTERED) {
+            Filter f = Filter.of(query.getStatus());
+            List<Long> ids = variants.searchIds(productId, f.actives(), f.minStock(), f.maxStock(), query.likePattern(),
+                    PageRequest.of(0, MAX_BULK));
+            return ids.isEmpty() ? List.of() : variants.findByProductAndIds(productId, ids);
+        }
+        Set<Long> ids = new LinkedHashSet<>(form.getIds());
+        return ids.isEmpty() ? List.of() : variants.findByProductAndIds(productId, ids);
+    }
+
+    private BulkResult setActive(List<ProductVariant> targets, boolean active) {
+        int changed = 0;
+        for (ProductVariant v : targets) {
+            if (v.isActive() != active) {
+                v.setActive(active);
+                changed++;
+            }
+        }
+        return new BulkResult(changed, targets.size() - changed, "already " + (active ? "active" : "inactive"));
+    }
+
+    private BulkResult adjustStock(List<ProductVariant> targets, BulkVariantForm form) {
+        int delta = form.getDelta() == null ? 0 : form.getDelta();
+        if (delta == 0) {
+            throw new ConflictException("Enter a stock change other than zero");
+        }
+        if (form.getReason() == null || !StockMovement.Reason.manual().contains(form.getReason())) {
+            throw new ConflictException("Choose a reason");
+        }
+        int changed = 0;
+        for (ProductVariant v : targets) {
+            if (stock.tryAdjust(v, delta, form.getReason(), form.getNote())) {
+                changed++;
+            }
+        }
+        return new BulkResult(changed, targets.size() - changed, "not enough stock to remove that many");
+    }
+
+    private BulkResult delete(Product product, List<ProductVariant> targets) {
+        if (!product.isOptioned()) {
+            throw new ConflictException("A product without options always keeps its single variant");
+        }
+        Set<Long> ordered = orderItems.findOrderedVariantIds(targets.stream().map(ProductVariant::getId).toList());
+        Set<Long> doomed = targets.stream().map(ProductVariant::getId).filter(id -> !ordered.contains(id))
+                .collect(Collectors.toSet());
+        product.getVariants().removeIf(v -> doomed.contains(v.getId()));
+        return new BulkResult(doomed.size(), targets.size() - doomed.size(), "already ordered, deactivate them instead");
     }
 }
