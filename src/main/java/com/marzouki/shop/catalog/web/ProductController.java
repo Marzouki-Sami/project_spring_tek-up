@@ -29,6 +29,7 @@ public class ProductController {
     @GetMapping
     public String list(@org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
         model.addAttribute("page", products.search(query));
+        model.addAttribute("exportPath", "/manage/products/export.csv");
         model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/manage/products", query.params()));
         model.addAttribute("statuses", com.marzouki.shop.common.ListQuery.choices("", "All products", "ACTIVE", "Active",
                 "HIDDEN", "Hidden", "LOW", "Low stock", "OUT", "Sold out"));

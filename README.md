@@ -48,6 +48,11 @@ into a tested, containerised application.
   the order confirmation email and downloadable by the customer, managers and the API.
   Emails are sent from a small separate thread pool after the request finishes (MAIL_ASYNC), so a slow
   mail server or PDF render never holds a customer's request or a database connection.
+- **CSV exports**: orders, products, customers, coupons, stock history and (for admins) the audit log, each a
+  button on its list that downloads exactly what the list shows with the current search and filters. Files
+  open correctly in Excel (UTF-8 with a byte order mark), text a spreadsheet would read as a formula is
+  neutralised, very large exports (over 100,000 rows) are refused, and every export is written to the audit
+  log because it contains personal data.
 - **Reviews and wishlist**: verified buyers can rate and review a product (one review each, editable);
   signed-in users keep a wishlist.
 - **Coupons** (`/manage/coupons`): percentage discount with an optional expiry date and usage limit.

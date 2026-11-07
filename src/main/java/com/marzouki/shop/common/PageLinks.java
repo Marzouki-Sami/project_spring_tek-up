@@ -6,6 +6,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 /** Builds links to other pages of a list that keep its filters. */
 public record PageLinks(String path, Map<String, Object> params) {
 
+    /** The same filters pointing at another path, such as the CSV export of the list being shown. */
+    public String exportTo(String otherPath) {
+        return new PageLinks(otherPath, params).to(0);
+    }
+
     public String to(int page) {
         UriComponentsBuilder uri = UriComponentsBuilder.fromPath(path);
         params.forEach(uri::queryParam);

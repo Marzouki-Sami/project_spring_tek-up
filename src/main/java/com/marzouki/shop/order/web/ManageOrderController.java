@@ -23,6 +23,7 @@ public class ManageOrderController {
     @GetMapping
     public String list(@org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
         model.addAttribute("page", orders.search(query));
+        model.addAttribute("exportPath", "/manage/orders/export.csv");
         model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/manage/orders", query.params()));
         java.util.List<String> pairs = new java.util.ArrayList<>(java.util.List.of("", "All orders"));
         for (OrderStatus s : OrderStatus.values()) {

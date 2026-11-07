@@ -58,6 +58,7 @@ public class ManageCouponController {
     private String page(Model model, com.marzouki.shop.common.ListQuery query) {
         model.addAttribute("query", query);
         model.addAttribute("page", orders.couponPage(query));
+        model.addAttribute("exportPath", "/manage/coupons/export.csv");
         model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/manage/coupons", query.params()));
         model.addAttribute("statuses", com.marzouki.shop.common.ListQuery.choices("", "All coupons", "USABLE", "Usable", "EXPIRED", "Expired", "DISABLED", "Disabled"));
         model.addAttribute("sorts", com.marzouki.shop.common.ListQuery.choices("", "Newest first", "code", "Code", "used", "Most used"));
