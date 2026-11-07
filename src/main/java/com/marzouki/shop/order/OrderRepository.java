@@ -7,7 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends JpaRepository<Order, Long>,
+        org.springframework.data.jpa.repository.JpaSpecificationExecutor<Order> {
+
+    @EntityGraph(attributePaths = "user")
+    @Override
+    org.springframework.data.domain.Page<Order> findAll(org.springframework.data.jpa.domain.Specification<Order> spec, org.springframework.data.domain.Pageable pageable);
 
     /** Moves an order between statuses only if it is still in the expected one; 0 means someone else got there first. */
     @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true)

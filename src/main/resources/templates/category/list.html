@@ -9,9 +9,10 @@
         <h1 class="h3 mb-0">Categories</h1>
         <a class="btn btn-primary" href="/manage/categories/new">New category</a>
     </div>
-    <p class="empty" th:if="${#lists.isEmpty(categories)}">No categories yet. Create the first one.</p>
-    <div class="table-responsive" th:unless="${#lists.isEmpty(categories)}">
-        <table class="table table-hover">
+    <section class="panel p-0">
+        <form th:replace="~{fragments/lists :: listbar('/manage/categories', ${query}, null, null, 'Search by title or description')}"></form>
+        <div class="table-scroll">
+        <table class="table table-hover align-middle mb-0">
             <thead>
                 <tr>
                     <th>Title</th>
@@ -21,7 +22,8 @@
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="item : ${categories}">
+                <tr th:if="${page.empty}"><td colspan="4" class="empty">No categories match.</td></tr>
+                <tr th:each="item : ${page.content}">
                     <td><span th:text="${item.title}"></span></td>
                     <td><span th:text="${item.description}"></span></td>
                     <td><span th:text="${#lists.size(item.subcategories)}"></span></td>
@@ -35,8 +37,11 @@
                 </tr>
             </tbody>
         </table>
-    </div>
+        </div>
+        <div th:replace="~{fragments/lists :: pager(${page}, ${links})}"></div>
+    </section>
 </main>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
 </body>
 </html>

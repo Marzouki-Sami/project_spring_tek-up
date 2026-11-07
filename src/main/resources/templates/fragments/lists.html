@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<!-- Search, filter, sort and page-size controls shared by the back-office lists. -->
+<form th:fragment="listbar(path, query, statuses, sorts, placeholder)" class="panel-toolbar" method="get" th:action="@{${path}}">
+    <div class="row g-2 align-items-center">
+        <div class="col-12 col-md">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input class="form-control" type="search" name="q" th:value="${query.q}" maxlength="80" th:placeholder="${placeholder}" aria-label="Search">
+            </div>
+        </div>
+        <div class="col-6 col-md-auto" th:if="${statuses != null}">
+            <select class="form-select form-select-sm" name="status" data-autosubmit aria-label="Filter">
+                <option th:each="s : ${statuses}" th:value="${s.key}" th:text="${s.value}" th:selected="${s.key == query.status}">All</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-auto" th:if="${sorts != null}">
+            <select class="form-select form-select-sm" name="sort" data-autosubmit aria-label="Sort by">
+                <option th:each="s : ${sorts}" th:value="${s.key}" th:text="${s.value}" th:selected="${s.key == query.sort}">Name</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-auto">
+            <select class="form-select form-select-sm" name="size" data-autosubmit aria-label="Rows per page">
+                <option th:each="n : ${query.sizes}" th:value="${n}" th:selected="${n == query.size}" th:text="${n} + ' per page'">25 per page</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-auto"><button class="btn btn-sm btn-outline-secondary w-100" type="submit">Search</button></div>
+    </div>
+</form>
+<div th:fragment="pager(page, links)" class="panel-footer d-flex flex-wrap justify-content-between align-items-center gap-2" th:if="${page.totalElements > 0}">
+    <span class="small text-secondary" th:text="'Showing ' + (${page.number} * ${page.size} + 1) + '-' + (${page.number} * ${page.size} + ${page.numberOfElements}) + ' of ' + ${page.totalElements}">Showing 1-25 of 60</span>
+    <nav aria-label="Pages" th:if="${page.totalPages > 1}">
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'"><a class="page-link" th:href="${links.to(page.number - 1)}">Previous</a></li>
+            <li class="page-item disabled"><span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 3</span></li>
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'"><a class="page-link" th:href="${links.to(page.number + 1)}">Next</a></li>
+        </ul>
+    </nav>
+</div>
+</body>
+</html>

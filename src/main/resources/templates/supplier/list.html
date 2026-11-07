@@ -9,9 +9,10 @@
         <h1 class="h3 mb-0">Suppliers</h1>
         <a class="btn btn-primary" href="/manage/suppliers/new">New supplier</a>
     </div>
-    <p class="empty" th:if="${#lists.isEmpty(suppliers)}">No suppliers yet.</p>
-    <div class="table-responsive" th:unless="${#lists.isEmpty(suppliers)}">
-        <table class="table table-hover">
+    <section class="panel p-0">
+        <form th:replace="~{fragments/lists :: listbar('/manage/suppliers', ${query}, ${statuses}, null, 'Search by company, contact or email')}"></form>
+        <div class="table-scroll">
+        <table class="table table-hover align-middle mb-0">
             <thead>
                 <tr>
                     <th>Company</th>
@@ -23,7 +24,8 @@
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="item : ${suppliers}">
+                <tr th:if="${page.empty}"><td colspan="6" class="empty">No suppliers match.</td></tr>
+                <tr th:each="item : ${page.content}">
                     <td><span th:text="${item.company}"></span></td>
                     <td><span th:text="${item.contactName}"></span></td>
                     <td><span th:text="${item.email}"></span></td>
@@ -39,8 +41,11 @@
                 </tr>
             </tbody>
         </table>
-    </div>
+        </div>
+        <div th:replace="~{fragments/lists :: pager(${page}, ${links})}"></div>
+    </section>
 </main>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
 </body>
 </html>

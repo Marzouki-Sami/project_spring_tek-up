@@ -10,7 +10,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>,
+        org.springframework.data.jpa.repository.JpaSpecificationExecutor<Product> {
+
+    @EntityGraph(attributePaths = {"subcategory", "subcategory.category"})
+    @Override
+    Page<Product> findAll(org.springframework.data.jpa.domain.Specification<Product> spec, Pageable pageable);
 
     @EntityGraph(attributePaths = {"subcategory", "subcategory.category", "supplier", "productType"})
     List<Product> findAllByOrderByNameAsc();

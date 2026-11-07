@@ -4,7 +4,8 @@ import java.util.List;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CategoryRepository extends JpaRepository<Category, Long> {
+public interface CategoryRepository extends JpaRepository<Category, Long>,
+        org.springframework.data.jpa.repository.JpaSpecificationExecutor<Category> {
 
     boolean existsByTitleIgnoreCase(String title);
 

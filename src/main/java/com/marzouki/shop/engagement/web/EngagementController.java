@@ -57,8 +57,12 @@ public class EngagementController {
     }
 
     @GetMapping("/account/wishlist")
-    public String wishlist(@AuthenticationPrincipal AppUserDetails me, Model model) {
-        model.addAttribute("items", engagement.wishlistOf(me.getId()));
+    public String wishlist(@AuthenticationPrincipal AppUserDetails me,
+                           @org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
+        model.addAttribute("page", engagement.wishlistPage(me.getId(), query));
+        model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/account/wishlist", query.params()));
+        model.addAttribute("sorts", com.marzouki.shop.common.ListQuery.choices("", "Recently saved", "oldest", "Saved first", "name", "Name",
+                "price-asc", "Price: low to high", "price-desc", "Price: high to low"));
         return "wishlist/wishlist";
     }
 }

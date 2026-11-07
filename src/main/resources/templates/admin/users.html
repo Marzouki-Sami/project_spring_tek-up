@@ -6,13 +6,16 @@
 <div th:replace="~{fragments/layout :: flash}"></div>
 <main class="container">
     <h1 class="h3 mb-3">Users</h1>
-    <div class="table-responsive">
-        <table class="table table-hover bg-white">
+    <section class="panel p-0">
+        <form th:replace="~{fragments/lists :: listbar('/admin/users', ${query}, ${statuses}, ${sorts}, 'Search by name or email')}"></form>
+        <div class="table-scroll">
+        <table class="table table-hover align-middle mb-0">
             <thead>
                 <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>2FA</th><th class="text-end">Actions</th></tr>
             </thead>
             <tbody>
-                <tr th:each="u : ${users}">
+                <tr th:if="${page.empty}"><td colspan="6" class="empty">No users match.</td></tr>
+                <tr th:each="u : ${page.content}">
                     <td th:text="${u.fullName}">Name</td>
                     <td th:text="${u.email}">email</td>
                     <td>
@@ -54,9 +57,12 @@
                 </tr>
             </tbody>
         </table>
-    </div>
+        </div>
+        <div th:replace="~{fragments/lists :: pager(${page}, ${links})}"></div>
+    </section>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
 </body>
 </html>

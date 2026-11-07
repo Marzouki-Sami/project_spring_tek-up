@@ -3,53 +3,57 @@
 <head th:replace="~{fragments/layout :: head('Products')}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: nav('products')}"></nav>
-<div th:replace="~{fragments/layout :: flash}"></div>
 <main class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0">Products</h1>
         <a class="btn btn-primary" th:href="@{/manage/products/new}">New product</a>
     </div>
-    <p class="empty" th:if="${#lists.isEmpty(products)}">No products yet. Create a category and a subcategory first.</p>
-    <div class="panel p-0 table-responsive" th:unless="${#lists.isEmpty(products)}">
-        <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th>SKU</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th class="num">Price</th>
-                    <th class="num">Stock</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="item : ${products}">
-                    <td><code th:text="${item.sku}"></code></td>
-                    <td>
-                        <span th:text="${item.name}"></span>
-                        <span class="badge text-bg-light border ms-1" th:if="${item.optioned}" th:text="${item.productType.name} + ' · ' + ${#lists.size(item.variants)} + ' variants'">Type</span>
-                    </td>
-                    <td><span th:text="${item.subcategory.category.title + ' / ' + item.subcategory.title}"></span></td>
-                    <td class="num"><span th:text="(${item.priceVaries} ? 'from ' : '') + ${#numbers.formatDecimal(item.fromPrice, 1, 'COMMA', 2, 'POINT')}"></span></td>
-                    <td class="num"><span th:text="${item.stock}" th:classappend="${item.stock == 0} ? 'text-danger fw-semibold'"></span></td>
-                    <td><span class="badge" th:classappend="${item.active} ? text-bg-success : text-bg-secondary" th:text="${item.active} ? 'Active' : 'Hidden'"></span></td>
-                    <td class="text-end actions">
-                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/products/{id}/edit(id=${item.id})}">Edit</a>
-                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/products/{id}/images(id=${item.id})}" aria-label="Images"><i class="bi bi-images"></i> <span th:text="${#lists.size(item.images)}">0</span></a>
-                        <a class="btn btn-sm btn-outline-secondary" th:if="${item.optioned}" th:href="@{/manage/products/{id}/variants(id=${item.id})}">Variants</a>
-                        <a class="btn btn-sm btn-outline-secondary" th:unless="${item.optioned}" th:href="@{/manage/variants/{id}/stock(id=${item.defaultVariant.id})}">Stock</a>
-                        <form th:action="@{/manage/products/{id}/delete(id=${item.id})}" method="post"
-                              data-confirm="Delete this item? This cannot be undone.">
-                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <section class="panel p-0">
+        <form th:replace="~{fragments/lists :: listbar('/manage/products', ${query}, ${statuses}, ${sorts}, 'Search by name or SKU')}"></form>
+        <div class="table-scroll">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th class="num">Price</th>
+                        <th class="num">Stock</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${page.empty}"><td colspan="7" class="empty" th:text="${query.q.empty and query.status.empty} ? 'No products yet. Create a category and a subcategory first.' : 'No products match.'">No products.</td></tr>
+                    <tr th:each="item : ${page.content}">
+                        <td><code th:text="${item.sku}"></code></td>
+                        <td>
+                            <span th:text="${item.name}"></span>
+                            <span class="badge text-bg-light border ms-1" th:if="${item.optioned}" th:text="${item.productType.name} + ' · ' + ${#lists.size(item.variants)} + ' variants'">Type</span>
+                        </td>
+                        <td><span th:text="${item.subcategory.category.title + ' / ' + item.subcategory.title}"></span></td>
+                        <td class="num"><span th:text="(${item.priceVaries} ? 'from ' : '') + ${#numbers.formatDecimal(item.fromPrice, 1, 'COMMA', 2, 'POINT')}"></span></td>
+                        <td class="num"><span th:text="${item.stock}" th:classappend="${item.stock == 0} ? 'text-danger fw-semibold'"></span></td>
+                        <td><span class="badge" th:classappend="${item.active} ? text-bg-success : text-bg-secondary" th:text="${item.active} ? 'Active' : 'Hidden'"></span></td>
+                        <td class="text-end actions">
+                            <a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/products/{id}/edit(id=${item.id})}">Edit</a>
+                            <a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/products/{id}/images(id=${item.id})}" aria-label="Images" data-bs-toggle="tooltip" title="Manage pictures"><i class="bi bi-images"></i> <span th:text="${#lists.size(item.images)}">0</span></a>
+                            <a class="btn btn-sm btn-outline-secondary" th:if="${item.optioned}" th:href="@{/manage/products/{id}/variants(id=${item.id})}">Variants</a>
+                            <a class="btn btn-sm btn-outline-secondary" th:unless="${item.optioned}" th:href="@{/manage/variants/{id}/stock(id=${item.defaultVariant.id})}">Stock</a>
+                            <form th:action="@{/manage/products/{id}/delete(id=${item.id})}" method="post"
+                                  data-confirm="Delete this item? This cannot be undone.">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:replace="~{fragments/lists :: pager(${page}, ${links})}"></div>
+    </section>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/manage.js}"></script>
 </body>
 </html>

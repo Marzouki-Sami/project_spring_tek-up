@@ -18,7 +18,13 @@
 
     // Selects that filter a table apply themselves.
     document.querySelectorAll('[data-autosubmit]').forEach(function (select) {
-        select.addEventListener('change', function () { select.form.requestSubmit(); });
+        select.addEventListener('change', function () {
+            if (select.id === 'category') {
+                var type = document.getElementById('subcategory');
+                if (type) { type.value = ''; }
+            }
+            select.form.requestSubmit();
+        });
     });
 
     // A colour picker only makes sense for options shown as swatches.

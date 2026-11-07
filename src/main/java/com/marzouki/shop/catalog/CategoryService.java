@@ -17,6 +17,13 @@ public class CategoryService {
     private final SubcategoryRepository subcategories;
     private final CatalogMapper mapper;
 
+    public org.springframework.data.domain.Page<Category> search(com.marzouki.shop.common.ListQuery query) {
+        var page = categories.findAll(com.marzouki.shop.common.Specs.<Category>text(query.like(), "title", "description"),
+                query.pageRequest(org.springframework.data.domain.Sort.by("title").ascending().and(org.springframework.data.domain.Sort.by("id"))));
+        page.forEach(c -> c.getSubcategories().size());
+        return page;
+    }
+
     public List<Category> findAll() {
         return categories.findAllByOrderByTitleAsc();
     }

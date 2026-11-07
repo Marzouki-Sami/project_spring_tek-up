@@ -181,6 +181,57 @@ public class OrderService {
         coupons.findById(id).orElseThrow(() -> new NotFoundException("Coupon", id)).setActive(active);
     }
 
+    /** One page of the back-office order list. A number in the search box also matches the order number. */
+    public org.springframework.data.domain.Page<Order> search(com.marzouki.shop.common.ListQuery query) {
+        return search(query, null);
+    }
+
+    /** The same list limited to one customer's own orders when a user id is given. */
+    public org.springframework.data.domain.Page<Order> search(com.marzouki.shop.common.ListQuery query, Long onlyUserId) {
+        org.springframework.data.jpa.domain.Specification<Order> text = com.marzouki.shop.common.Specs.<Order>text(query.like(),
+                "user.firstName", "user.lastName", "user.email", "fullName", "city");
+        if (query.getQ().matches("[0-9]{1,15}")) {
+            long number = Long.parseLong(query.getQ());
+            text = text.or((r, q, cb) -> cb.equal(r.get("id"), number));
+        }
+        org.springframework.data.jpa.domain.Specification<Order> status = com.marzouki.shop.common.Specs.none();
+        try {
+            if (!query.getStatus().isEmpty()) {
+                OrderStatus wanted = OrderStatus.valueOf(query.getStatus());
+                status = (r, q, cb) -> cb.equal(r.get("status"), wanted);
+            }
+        } catch (IllegalArgumentException ignored) {
+            // an unknown status shows everything
+        }
+        org.springframework.data.domain.Sort sort = switch (query.getSort()) {
+            case "oldest" -> org.springframework.data.domain.Sort.by("createdAt").ascending().and(org.springframework.data.domain.Sort.by("id"));
+            case "total-desc" -> org.springframework.data.domain.Sort.by("total").descending().and(org.springframework.data.domain.Sort.by("id").descending());
+            case "total-asc" -> org.springframework.data.domain.Sort.by("total").ascending().and(org.springframework.data.domain.Sort.by("id"));
+            default -> org.springframework.data.domain.Sort.by("createdAt").descending().and(org.springframework.data.domain.Sort.by("id").descending());
+        };
+        org.springframework.data.jpa.domain.Specification<Order> owner = onlyUserId == null ? com.marzouki.shop.common.Specs.none()
+                : (r, q, cb) -> cb.equal(r.get("user").get("id"), onlyUserId);
+        return orders.findAll(text.and(status).and(owner), query.pageRequest(sort));
+    }
+
+    public org.springframework.data.domain.Page<Coupon> couponPage(com.marzouki.shop.common.ListQuery query) {
+        Instant now = Instant.now();
+        org.springframework.data.jpa.domain.Specification<Coupon> status = switch (query.getStatus()) {
+            case "USABLE" -> (r, q, cb) -> cb.and(cb.isTrue(r.get("active")),
+                    cb.or(cb.isNull(r.get("expiresAt")), cb.greaterThan(r.<Instant>get("expiresAt"), now)),
+                    cb.or(cb.isNull(r.get("maxUses")), cb.lessThan(r.<Integer>get("usedCount"), r.<Integer>get("maxUses"))));
+            case "DISABLED" -> (r, q, cb) -> cb.isFalse(r.get("active"));
+            case "EXPIRED" -> (r, q, cb) -> cb.and(cb.isNotNull(r.get("expiresAt")), cb.lessThanOrEqualTo(r.<Instant>get("expiresAt"), now));
+            default -> com.marzouki.shop.common.Specs.none();
+        };
+        org.springframework.data.domain.Sort sort = switch (query.getSort()) {
+            case "code" -> org.springframework.data.domain.Sort.by("code").ascending();
+            case "used" -> org.springframework.data.domain.Sort.by("usedCount").descending().and(org.springframework.data.domain.Sort.by("id"));
+            default -> org.springframework.data.domain.Sort.by("createdAt").descending().and(org.springframework.data.domain.Sort.by("id").descending());
+        };
+        return coupons.findAll(com.marzouki.shop.common.Specs.<Coupon>text(query.like(), "code").and(status), query.pageRequest(sort));
+    }
+
     public List<Coupon> coupons() {
         return coupons.findAllByOrderByCreatedAtDescIdDesc();
     }

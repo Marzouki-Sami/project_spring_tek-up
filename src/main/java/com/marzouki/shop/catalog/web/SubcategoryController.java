@@ -24,8 +24,10 @@ public class SubcategoryController {
     private final CategoryService categories;
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("subcategories", subcategories.findAll());
+    public String list(@org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
+        model.addAttribute("page", subcategories.search(query));
+        model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/manage/subcategories", query.params()));
+        model.addAttribute("sorts", com.marzouki.shop.common.ListQuery.choices("", "By category", "title", "Title"));
         return "subcategory/list";
     }
 

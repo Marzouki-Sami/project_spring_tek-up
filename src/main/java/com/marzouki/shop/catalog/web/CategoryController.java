@@ -22,8 +22,9 @@ public class CategoryController {
     private final CategoryService categories;
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("categories", categories.findAll());
+    public String list(@org.springframework.web.bind.annotation.ModelAttribute("query") com.marzouki.shop.common.ListQuery query, Model model) {
+        model.addAttribute("page", categories.search(query));
+        model.addAttribute("links", new com.marzouki.shop.common.PageLinks("/manage/categories", query.params()));
         return "category/list";
     }
 

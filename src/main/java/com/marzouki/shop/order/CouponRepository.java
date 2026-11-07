@@ -7,7 +7,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface CouponRepository extends JpaRepository<Coupon, Long> {
+public interface CouponRepository extends JpaRepository<Coupon, Long>,
+        org.springframework.data.jpa.repository.JpaSpecificationExecutor<Coupon> {
 
     Optional<Coupon> findByCodeIgnoreCase(String code);
 
