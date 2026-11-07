@@ -53,6 +53,12 @@ into a tested, containerised application.
   open correctly in Excel (UTF-8 with a byte order mark), text a spreadsheet would read as a formula is
   neutralised, very large exports (over 100,000 rows) are refused, and every export is written to the audit
   log because it contains personal data.
+- **Related products**: each product page suggests up to four others: the ones a manager picked first
+  (/manage/products/{id}/related), then what other customers bought in the same orders (cached for ten
+  minutes, cancelled orders ignored), then the rest of the subcategory. Hidden products are never shown.
+- **Back in stock**: when an item that was sold out has stock again, customers who have it in their saved
+  basket or whose wishlist holds its product get an email, at most once a week per item, unless they turned
+  it off in their profile. Orders cancelled while an item was sold out count too.
 - **Reviews and wishlist**: verified buyers can rate and review a product (one review each, editable);
   signed-in users keep a wishlist.
 - **Coupons** (`/manage/coupons`): percentage discount with an optional expiry date and usage limit.

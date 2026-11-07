@@ -43,7 +43,8 @@
         </div>
         <p class="text-secondary" th:unless="${creating}">
             <i class="bi bi-box-seam"></i>
-            <a th:if="${existing != null and existing.optioned}" th:href="@{/manage/products/{id}/variants(id=${existing.id})}">Manage variants and stock</a>
+            <a th:if="${existing != null}" th:href="@{/manage/products/{id}/related(id=${existing.id})}">Choose related products</a>
+        <a th:if="${existing != null and existing.optioned}" th:href="@{/manage/products/{id}/variants(id=${existing.id})}">Manage variants and stock</a>
             <a th:if="${existing != null and !existing.optioned and existing.defaultVariant != null}" th:href="@{/manage/variants/{id}/stock(id=${existing.defaultVariant.id})}">Adjust stock and see its history</a>
         </p><div class="mb-3">
             <label class="form-label" for="subcategoryId">Subcategory</label>

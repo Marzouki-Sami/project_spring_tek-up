@@ -35,6 +35,7 @@ class NotificationService {
     private final ProductVariantRepository variantRepository;
     private final SendThrottle throttle;
     private final com.marzouki.shop.invoice.InvoiceService invoices;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @org.springframework.scheduling.annotation.Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -78,6 +79,36 @@ class NotificationService {
         List<User> staff = users.findByRoleInAndEnabledTrueAndLowStockAlertsTrue(List.of(Role.MANAGER, Role.ADMIN));
         for (User person : staff) {
             deliver("low stock alert", () -> composer.lowStock(person.getEmail(), variant));
+        }
+    }
+
+    /** Tells people who were waiting for an item that it is available again, at most once a week per item. */
+    @org.springframework.scheduling.annotation.Async("mailExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    void onBackInStock(OrderEvents.BackInStock event) {
+        ProductVariant variant = variantRepository.findWithDetailsById(event.variantId()).orElse(null);
+        if (variant == null || !variant.isActive() || !variant.getProduct().isActive() || variant.getStock() <= 0) {
+            return;
+        }
+        for (User person : users.backInStockAudience(variant.getId(), variant.getProduct().getId())) {
+            if (claimAlert(person.getId(), variant.getId())) {
+                deliver("back in stock alert", () -> composer.backInStock(person, variant));
+            }
+        }
+    }
+
+    /** True when this person has not been told about this item in the last week. Safe when two alerts race. */
+    private boolean claimAlert(Long userId, Long variantId) {
+        java.sql.Timestamp now = java.sql.Timestamp.from(java.time.Instant.now());
+        java.sql.Timestamp cutoff = java.sql.Timestamp.from(java.time.Instant.now().minus(7, java.time.temporal.ChronoUnit.DAYS));
+        if (jdbc.update("update stock_alert_log set sent_at = ? where user_id = ? and variant_id = ? and sent_at < ?", now, userId, variantId, cutoff) > 0) {
+            return true;
+        }
+        try {
+            return jdbc.update("insert into stock_alert_log (user_id, variant_id, sent_at) values (?, ?, ?)", userId, variantId, now) == 1;
+        } catch (org.springframework.dao.DuplicateKeyException e) {
+            return false;
         }
     }
 

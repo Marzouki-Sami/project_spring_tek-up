@@ -44,6 +44,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
 
     long countByActiveTrue();
 
+    java.util.Optional<Product> findBySkuIgnoreCase(String sku);
+
+    @EntityGraph(attributePaths = {"subcategory", "subcategory.category"})
+    List<Product> findBySubcategoryIdAndActiveTrueAndIdNotOrderByCreatedAtDescIdDesc(Long subcategoryId, Long id, Pageable pageable);
+
     boolean existsByProductTypeId(Long productTypeId);
 
     boolean existsBySkuIgnoreCase(String sku);

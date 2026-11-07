@@ -34,6 +34,7 @@ public class StorefrontController {
 
     private final ProductRepository products;
     private final ProductService productService;
+    private final com.marzouki.shop.catalog.RelatedProducts relatedProducts;
     private final SubcategoryRepository subcategoryRepository;
     private final CategoryRepository categories;
     private final EngagementService engagement;
@@ -68,6 +69,7 @@ public class StorefrontController {
         ProductViews.warm(java.util.List.of(product));
         model.addAttribute("product", product);
         model.addAttribute("page", ProductPage.of(product, json));
+        model.addAttribute("related", relatedProducts.forProduct(id));
         model.addAttribute("reviews", engagement.reviewsFor(id));
         model.addAttribute("average", engagement.averageRating(id));
         model.addAttribute("reviewForm", new ReviewForm());
