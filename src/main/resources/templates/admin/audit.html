@@ -38,6 +38,7 @@
                     </select>
                 </div>
                 <div class="col-12 col-lg-auto"><button class="btn btn-sm btn-outline-secondary w-100" type="submit">Filter</button></div>
+                <div class="col-12 col-lg-auto"><a class="btn btn-sm btn-outline-secondary w-100" th:href="@{/admin/audit/export.csv(q=${q},outcome=${outcome},from=${from},to=${to})}" data-bs-toggle="tooltip" title="Download the entries matching these filters as a spreadsheet file"><i class="bi bi-download"></i> CSV</a></div>
             </div>
         </form>
         <div class="table-scroll">

@@ -6,7 +6,10 @@
 <main class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0">Products</h1>
-        <a class="btn btn-primary" th:href="@{/manage/products/new}">New product</a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" th:href="@{/manage/stock/export.csv}" data-bs-toggle="tooltip" title="Every stock change of the last 90 days as a spreadsheet file"><i class="bi bi-download"></i> Stock history</a>
+            <a class="btn btn-primary" th:href="@{/manage/products/new}">New product</a>
+        </div>
     </div>
     <section class="panel p-0">
         <form th:replace="~{fragments/lists :: listbar('/manage/products', ${query}, ${statuses}, ${sorts}, 'Search by name or SKU')}"></form>
