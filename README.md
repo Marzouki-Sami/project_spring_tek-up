@@ -3,41 +3,46 @@
 An online store built with Spring Boot: a public storefront, customer accounts, a back office
 for managers and a REST API with token authentication.
 
-> Work in progress. This repository started as a university exercise and is being rebuilt
-> step by step into a complete, tested application. See the roadmap below.
+The project started as a university exercise and has been rebuilt in place, with its history kept,
+into a tested, containerised application.
 
-## What works today
+## Features
 
-- **Storefront**: guests browse, search, filter and sort products without an account.
+- **Storefront**: guests browse, search, filter and sort products without an account. Light and dark
+  theme that follows the system setting.
 - **Cart**: guests can fill a basket and keep it through sign-in; it is lost when the session ends.
   Checkout needs an account.
 - **Orders**: delivery address, optional percentage coupon, live stock check, order history, customer
-  cancellation while an order is still placed, and a manager workflow
-  (placed, processing, shipped, delivered, cancelled). Stock is taken atomically so two buyers can never
-  oversell, every change is logged in stock_movements, and cancelling returns the items.
+  cancellation while an order is still placed, and a manager workflow (placed, processing, shipped,
+  delivered, cancelled). Stock is taken atomically so two buyers can never oversell, every change is
+  logged in `stock_movements`, and cancelling returns the items.
 - **Reviews and wishlist**: verified buyers can rate and review a product (one review each, editable);
   signed-in users keep a wishlist.
-- **Dashboard** (/manage): revenue, orders by status, best sellers and low-stock alerts.
-- **Email**: confirmation link at sign-up, password reset, order confirmation, shipping notice and a
-  low-stock alert to managers. Links are single-use and stored only as hashes. By default emails are
-  saved as text files in mail-outbox/ instead of being sent.
-- **Coupons** (/manage/coupons): percentage, optional expiry date and usage limit.
-- **Accounts**: sign-up with a strong-password policy, sign-in, profile and password change.
-- **Roles**: `CUSTOMER`, `MANAGER` (manages the catalog) and `ADMIN` (also manages users). Each role
-  inherits what the roles below it can do.
-- **Back office** (`/manage`): products, categories, subcategories and suppliers.
-- **User administration** (`/admin/users`): change roles, disable or unlock accounts.
-- **REST API** (`/api`): register, log in, refresh and log out with short-lived JWT access tokens
-  and rotating refresh tokens.
+- **Coupons** (`/manage/coupons`): percentage discount with an optional expiry date and usage limit.
+- **Dashboard** (`/manage`): revenue, orders by status, best sellers and low-stock alerts.
+- **Back office** (`/manage`): products, categories, subcategories, suppliers, orders and coupons.
+- **Accounts and roles**: sign-up with a strong-password policy, email confirmation, password reset by
+  email, profile and password change. Roles are `CUSTOMER`, `MANAGER` (runs the shop) and `ADMIN`
+  (also manages users at `/admin/users`); each role inherits what the roles below it can do.
+- **Email**: confirmation, password reset, order confirmation, shipping notice and a low-stock alert
+  to managers. Links are single-use and stored only as hashes. By default emails are saved as text
+  files in `mail-outbox/` instead of being sent.
+- **REST API** (`/api`, interactive docs at `/api/docs`): public catalog search, manager-only product
+  changes, and register, log in, refresh and log out with short-lived JWT access tokens and rotating
+  refresh tokens.
 
 ## Security
 
 - Passwords are stored with BCrypt. Public sign-up can only ever create a `CUSTOMER`.
 - Five wrong passwords lock an account for 15 minutes.
-- The website uses a session cookie (HttpOnly, SameSite=Lax) with CSRF protection; the API is
-  stateless and uses bearer tokens.
-- Refresh tokens are random, stored only as hashes, valid once, and reuse of an old token signs the
-  account out everywhere.
+- The website uses a session cookie (HttpOnly, SameSite=Lax, Secure by default in production) with CSRF
+  protection; the API is stateless and uses bearer tokens.
+- Website sessions follow the account: disabling it or changing its password ends them, and a role
+  change applies immediately.
+- Refresh tokens are random, stored only as hashes, valid once (claimed atomically), and reuse of an old
+  token signs the account out everywhere.
+- Order status changes and coupon or stock updates are conditional database updates, so concurrent
+  requests cannot restock or redeem twice.
 - Strict Content-Security-Policy, frame denial and referrer policy; all assets are served locally.
 - CI runs CodeQL, gitleaks and dependency review. See [SECURITY.md](SECURITY.md).
 
@@ -79,21 +84,45 @@ JWT_SECRET=$(openssl rand -base64 48) MAIL_ENABLED=false \
   ./mvnw spring-boot:run -Dspring-boot.run.profiles=mysql
 ```
 
-`JWT_SECRET` (at least 32 characters) is required with the `mysql` profile. Set
-`SESSION_COOKIE_SECURE=true` when serving over HTTPS.
+With the `mysql` profile `JWT_SECRET` (at least 32 characters) and `MAIL_ENABLED` must be set, and the
+session cookie is `Secure` by default. Set `SESSION_COOKIE_SECURE=false` only for plain-HTTP local runs.
 
-Email is off by default. To send real mail set MAIL_ENABLED=true, SMTP_HOST, SMTP_PORT,
-SMTP_USERNAME, SMTP_PASSWORD, MAIL_FROM and APP_BASE_URL (the public address used in email links).
+Email is off by default. To send real mail set `MAIL_ENABLED=true`, `SMTP_HOST`, `SMTP_PORT`,
+`SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM` and `APP_BASE_URL` (the public address used in email links).
 With email on, customers must confirm their address before checking out.
 
 The schema is owned by Flyway migrations in `src/main/resources/db/migration`; Hibernate only
 validates that the entities match it.
 
+## Project layout
+
+```
+src/main/java/com/marzouki/shop
+  catalog/    products, categories, suppliers and their back-office pages
+  cart/       session basket and pricing
+  order/      orders, coupons, stock movements, checkout
+  engagement/ reviews and wishlist
+  dashboard/  manager overview
+  user/       accounts, roles, tokens, recovery
+  security/   web and API security, JWT, session handling
+  api/        REST controllers and OpenAPI
+  mail/       email composition and delivery
+  setup/      first-admin bootstrap and demo data
+```
+
+## Tests
+
+`./mvnw test` runs unit, web and integration tests (security matrix, checkout flow, concurrency
+guards, email flows). CI also runs the suite against MySQL 8.4, CodeQL, gitleaks, dependency review
+and a container image build.
+
 ## Roadmap
 
-1. Foundation: Java 21, Spring Boot 3.5, Flyway, domain model, catalog pages, tests (done)
-2. Security: BCrypt passwords, form login, JWT for the API, roles, storefront (done)
-3. Catalog REST API with OpenAPI docs, dark mode (done)
-4. Cart (guest and signed-in), orders, stock movements and coupons (done)
-5. Reviews, wishlist, dashboard and emails (done)
-6. Docker Compose, screenshots, release polish
+Delivered: foundation, security and roles, catalog API with OpenAPI, dark mode, cart and orders,
+coupons, reviews, wishlist, dashboard, emails, Docker Compose.
+
+Ideas for later: online payments, multiple languages, product images, an orders API.
+
+## License
+
+[MIT](LICENSE)
