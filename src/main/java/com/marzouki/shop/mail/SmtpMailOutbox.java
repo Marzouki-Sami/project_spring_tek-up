@@ -26,6 +26,9 @@ class SmtpMailOutbox implements MailOutbox {
             helper.setTo(email.to());
             helper.setSubject(email.subject());
             helper.setText(email.text(), email.html());
+            for (Email.Attachment file : email.attachments()) {
+                helper.addAttachment(file.filename(), new org.springframework.core.io.ByteArrayResource(file.data()), file.contentType());
+            }
             sender.send(message);
         } catch (Exception e) {
             log.error("Could not send the email '{}'", email.subject(), e);

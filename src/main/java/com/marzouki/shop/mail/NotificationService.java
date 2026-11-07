@@ -34,7 +34,9 @@ class NotificationService {
     private final OrderRepository orders;
     private final ProductVariantRepository variantRepository;
     private final SendThrottle throttle;
+    private final com.marzouki.shop.invoice.InvoiceService invoices;
 
+    @org.springframework.scheduling.annotation.Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     void onVerification(UserEvents.VerificationRequested event) {
@@ -42,6 +44,7 @@ class NotificationService {
                 .ifPresent(u -> deliver("verification", () -> composer.verification(u, event.token())));
     }
 
+    @org.springframework.scheduling.annotation.Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     void onPasswordReset(UserEvents.PasswordResetRequested event) {
@@ -49,13 +52,14 @@ class NotificationService {
                 .ifPresent(u -> deliver("password reset", () -> composer.passwordReset(u, event.token())));
     }
 
+    @org.springframework.scheduling.annotation.Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     void onOrderPlaced(OrderEvents.OrderPlaced event) {
         orders.findWithItemsById(event.orderId())
-                .ifPresent(o -> deliver("order confirmation", () -> composer.orderConfirmation(o)));
+                .ifPresent(o -> deliver("order confirmation", () -> withInvoice(composer.orderConfirmation(o), o.getId())));
     }
 
+    @org.springframework.scheduling.annotation.Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     void onOrderShipped(OrderEvents.OrderShipped event) {
@@ -63,6 +67,7 @@ class NotificationService {
                 .ifPresent(o -> deliver("shipping notice", () -> composer.orderShipped(o)));
     }
 
+    @org.springframework.scheduling.annotation.Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     void onLowStock(OrderEvents.LowStock event) {
@@ -73,6 +78,17 @@ class NotificationService {
         List<User> staff = users.findByRoleInAndEnabledTrueAndLowStockAlertsTrue(List.of(Role.MANAGER, Role.ADMIN));
         for (User person : staff) {
             deliver("low stock alert", () -> composer.lowStock(person.getEmail(), variant));
+        }
+    }
+
+    /** Attaches the invoice PDF. If it cannot be made the confirmation still goes out without it. */
+    private Email withInvoice(Email email, Long orderId) {
+        try {
+            var document = invoices.document(orderId);
+            return email.withAttachment(new Email.Attachment(document.filename(), "application/pdf", document.pdf()));
+        } catch (RuntimeException e) {
+            log.error("Could not attach the invoice to the confirmation of order {}", orderId, e);
+            return email;
         }
     }
 

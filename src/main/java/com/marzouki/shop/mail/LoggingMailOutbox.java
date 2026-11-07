@@ -36,6 +36,9 @@ class LoggingMailOutbox implements MailOutbox {
             Path file = directory.resolve("%d-%03d.txt".formatted(Instant.now().toEpochMilli(), COUNTER.incrementAndGet() % 1000));
             Files.writeString(file, "To: " + email.to() + "\nSubject: " + email.subject() + "\n\n" + email.text() + "\n",
                     StandardCharsets.UTF_8);
+            for (Email.Attachment attachment : email.attachments()) {
+                Files.write(directory.resolve(file.getFileName() + "-" + attachment.filename().replaceAll("[^A-Za-z0-9._-]", "_")), attachment.data());
+            }
             log.info("Email not sent (app.mail.enabled=false); saved to {}", file.toAbsolutePath());
         } catch (IOException e) {
             log.warn("Could not save the development email", e);

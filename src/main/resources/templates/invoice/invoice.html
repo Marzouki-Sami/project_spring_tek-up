@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="'Invoice ' + ${invoice.number}">Invoice</title>
+    <style>
+        @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+        body { font-family: Invoice, sans-serif; font-size: 10pt; color: #24243a; line-height: 1.4; }
+        .label { font-family: sans-serif; font-weight: bold; }
+        .head { width: 100%; margin-bottom: 14mm; }
+        .head td { vertical-align: top; }
+        .brand { font-family: sans-serif; font-weight: bold; font-size: 20pt; }
+        .doc { text-align: right; }
+        .doc .title { font-family: sans-serif; font-weight: bold; font-size: 16pt; letter-spacing: 1pt; }
+        .muted { color: #6b6b85; }
+        .parties { width: 100%; margin-bottom: 10mm; }
+        .parties td { width: 50%; vertical-align: top; padding-right: 8mm; }
+        h3 { font-family: sans-serif; font-size: 8pt; text-transform: uppercase; letter-spacing: 1pt; color: #6b6b85; margin: 0 0 2mm 0; }
+        table.lines { width: 100%; border-collapse: collapse; margin-top: 4mm; }
+        table.lines th { font-family: sans-serif; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.6pt; text-align: left; padding: 2.5mm 2mm; border-bottom: 1.5pt solid #24243a; }
+        table.lines td { padding: 2.5mm 2mm; border-bottom: 0.5pt solid #e1e2ee; vertical-align: top; }
+        .num { text-align: right; white-space: nowrap; }
+        table.totals { width: 62mm; margin: 6mm 0 0 auto; border-collapse: collapse; }
+        table.totals td { padding: 1.4mm 2mm; }
+        table.totals tr.grand td { font-family: sans-serif; font-weight: bold; font-size: 11pt; border-top: 1.5pt solid #24243a; padding-top: 2.5mm; }
+        .stamp { font-family: sans-serif; font-weight: bold; color: #b42318; border: 1.5pt solid #b42318; padding: 2mm 4mm; display: inline-block; margin-bottom: 6mm; }
+        .note { margin-top: 12mm; padding-top: 4mm; border-top: 0.5pt solid #e1e2ee; font-size: 9pt; }
+    </style>
+</head>
+<body>
+    <table class="head">
+        <tr>
+            <td>
+                <div class="brand" th:style="'color:' + ${accent}" th:text="${invoice.sellerName}">Shop</div>
+                <div class="muted" th:if="${invoice.sellerAddress != null}" th:text="${invoice.sellerAddress}" style="white-space: pre-line;">Address</div>
+                <div class="muted" th:if="${invoice.sellerVatNumber != null}" th:text="'VAT no. ' + ${invoice.sellerVatNumber}">VAT no.</div>
+            </td>
+            <td class="doc">
+                <div class="title">INVOICE</div>
+                <div><span class="label">No.</span> <span th:text="${invoice.number}">INV-2026-000001</span></div>
+                <div><span class="label">Date</span> <span th:text="${#temporals.format(invoice.issuedAt, 'd MMMM yyyy')}">1 January 2026</span></div>
+                <div><span class="label">Order</span> <span th:text="'#' + ${order.id}">#1</span></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="stamp" th:if="${cancelled}">ORDER CANCELLED - NOTHING TO PAY</div>
+
+    <table class="parties">
+        <tr>
+            <td>
+                <h3>Billed to</h3>
+                <div th:text="${order.fullName}">Name</div>
+                <div th:text="${order.address}">Street</div>
+                <div th:text="${order.postalCode} + ' ' + ${order.city}">City</div>
+                <div th:text="${order.country}">Country</div>
+            </td>
+            <td>
+                <h3>Customer</h3>
+                <div th:text="${order.user.fullName}">Name</div>
+                <div class="muted" th:text="${order.user.email}">email</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="lines">
+        <thead>
+            <tr><th>Item</th><th>SKU</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr>
+        </thead>
+        <tbody>
+            <tr th:each="i : ${order.items}">
+                <td><span th:text="${i.name}">Item</span><span class="muted" th:if="${i.variantLabel != null}" th:text="' (' + ${i.variantLabel} + ')'"> (M)</span></td>
+                <td class="muted" th:text="${i.sku}">SKU</td>
+                <td class="num" th:text="${i.quantity}">1</td>
+                <td class="num" th:text="${#numbers.formatDecimal(i.unitPrice, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
+                <td class="num" th:text="${#numbers.formatDecimal(i.lineTotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tr><td>Subtotal</td><td class="num" th:text="${#numbers.formatDecimal(order.subtotal, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td></tr>
+        <tr th:if="${order.discount.signum() > 0}"><td th:text="'Discount' + (${order.couponCode} != null ? ' (' + ${order.couponCode} + ')' : '')">Discount</td><td class="num" th:text="'-' + ${#numbers.formatDecimal(order.discount, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td></tr>
+        <tr class="grand"><td>Total</td><td class="num" th:text="${#numbers.formatDecimal(amounts.total, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td></tr>
+        <tr class="muted"><td th:text="'Excluding VAT'">Excluding VAT</td><td class="num" th:text="${#numbers.formatDecimal(amounts.net, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td></tr>
+        <tr class="muted"><td th:text="'VAT ' + ${invoice.vatPercent} + '% (included)'">VAT 20% (included)</td><td class="num" th:text="${#numbers.formatDecimal(amounts.vat, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td></tr>
+    </table>
+
+    <div class="note muted" th:if="${invoice.note != null}" th:text="${invoice.note}">Thank you for your order.</div>
+</body>
+</html>
