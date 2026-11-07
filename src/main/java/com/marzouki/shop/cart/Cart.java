@@ -51,6 +51,13 @@ public class Cart implements Serializable {
         this.couponCode = couponCode;
     }
 
+    /** Replaces everything in the basket, for example with the one loaded from the database. */
+    public synchronized void replaceWith(Map<Long, Integer> items, String coupon) {
+        quantities.clear();
+        quantities.putAll(items);
+        couponCode = coupon;
+    }
+
     public synchronized void clear() {
         quantities.clear();
         couponCode = null;

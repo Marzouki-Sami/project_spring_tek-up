@@ -44,6 +44,15 @@ public class Order {
     @Column(nullable = false, length = 80)
     private String country;
 
+    @Column(length = 30)
+    private String phone;
+
+    @Column(precision = 9, scale = 6)
+    private BigDecimal latitude;
+
+    @Column(precision = 9, scale = 6)
+    private BigDecimal longitude;
+
     @Column(name = "coupon_code", length = 40)
     private String couponCode;
 

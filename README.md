@@ -11,7 +11,13 @@ into a tested, containerised application.
 - **Storefront**: guests browse, search, filter and sort products without an account. Light and dark
   theme that follows the system setting.
 - **Cart**: guests can fill a basket and keep it through sign-in; it is lost when the session ends.
-  Checkout needs an account.
+  Checkout needs an account. A signed-in customer's basket is saved and follows them across devices
+  (baskets idle for 60 days are cleaned up).
+- **Address book and map** (`/account/addresses`): save up to ten delivery addresses. In the form and
+  at checkout type an address, search, use your current location, or drop a pin on an OpenStreetMap
+  map; every field stays editable. Geocoding uses Nominatim through the server (cached and throttled).
+  Configure with `GEO_ENABLED`, `GEO_URL`, `GEO_USER_AGENT` and `GEO_TILE_URL`; for production use
+  your own provider or instance in line with the Nominatim usage policy.
 - **Orders**: delivery address, optional percentage coupon, live stock check, order history, customer
   cancellation while an order is still placed, and a manager workflow (placed, processing, shipped,
   delivered, cancelled). Stock is taken atomically so two buyers can never oversell, every change is
