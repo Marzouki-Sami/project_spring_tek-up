@@ -55,8 +55,17 @@ public class Product {
     @OrderBy("position, id")
     private List<ProductVariant> variants = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position, id")
+    private List<com.marzouki.shop.media.ProductImage> images = new ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    /** The image shown on cards and first in the gallery, or null when the product has none. */
+    public com.marzouki.shop.media.ProductImage getPrimaryImage() {
+        return images.isEmpty() ? null : images.get(0);
+    }
 
     public ProductVariant addVariant(String sku, int stock) {
         ProductVariant variant = new ProductVariant();

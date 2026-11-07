@@ -16,6 +16,8 @@ COPY --from=build /workspace/layers/dependencies/ ./
 COPY --from=build /workspace/layers/spring-boot-loader/ ./
 COPY --from=build /workspace/layers/snapshot-dependencies/ ./
 COPY --from=build /workspace/layers/application/ ./
+RUN mkdir -p /data/images && chown shop /data/images
+VOLUME /data/images
 USER shop
 EXPOSE 8081
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"

@@ -43,6 +43,9 @@ services:
       SMTP_HOST: mail
       SMTP_PORT: "1025"
       APP_BASE_URL: http://localhost:8081
+      IMAGES_DIR: /data/images
+    volumes:
+      - image-data:/data/images
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8081 && printf \"GET /actuator/health HTTP/1.0\\r\\n\\r\\n\" >&3 && grep -q UP <&3'"]
       interval: 10s
@@ -52,3 +55,4 @@ services:
 
 volumes:
   db-data:
+  image-data:

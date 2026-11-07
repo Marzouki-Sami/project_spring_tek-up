@@ -19,3 +19,13 @@ document.addEventListener('click', function (event) {
 document.querySelectorAll('[data-color]').forEach(function (element) {
     element.style.backgroundColor = element.getAttribute('data-color');
 });
+// Product gallery: keep the highlighted thumbnail in step with the visible slide.
+(function () {
+    var gallery = document.getElementById('gallery');
+    if (!gallery) { return; }
+    gallery.addEventListener('slid.bs.carousel', function (event) {
+        document.querySelectorAll('.gallery-thumb').forEach(function (thumb, index) {
+            thumb.classList.toggle('active', index === event.to);
+        });
+    });
+})();

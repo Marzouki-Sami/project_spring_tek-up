@@ -70,6 +70,7 @@ public class StorefrontController {
     @Transactional(readOnly = true)
     public String detail(@PathVariable Long id, @AuthenticationPrincipal AppUserDetails me, Model model) {
         Product product = products.findByIdAndActiveTrue(id).orElseThrow(() -> new NotFoundException("Product", id));
+        ProductViews.warm(java.util.List.of(product));
         model.addAttribute("product", product);
         model.addAttribute("page", ProductPage.of(product, json));
         model.addAttribute("reviews", engagement.reviewsFor(id));

@@ -24,6 +24,7 @@ public class ProductService {
     private final ProductTypeRepository types;
     private final OrderItemRepository orderItems;
     private final StockService stock;
+    private final com.marzouki.shop.media.ProductImageService imageFiles;
     private final CatalogMapper mapper;
 
     public List<Product> findAll() {
@@ -87,7 +88,9 @@ public class ProductService {
 
     @Transactional
     public void delete(Long id) {
-        products.delete(get(id));
+        Product product = get(id);
+        imageFiles.deleteFilesAfterCommit(product.getImages());
+        products.delete(product);
     }
 
     private void requireFreeSku(String sku, Long ignoreVariantId) {

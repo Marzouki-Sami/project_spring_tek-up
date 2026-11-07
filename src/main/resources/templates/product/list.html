@@ -36,6 +36,7 @@
                     <td><span class="badge" th:classappend="${item.active} ? text-bg-success : text-bg-secondary" th:text="${item.active} ? 'Active' : 'Hidden'"></span></td>
                     <td class="text-end actions">
                         <a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/products/{id}/edit(id=${item.id})}">Edit</a>
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/manage/products/{id}/images(id=${item.id})}" aria-label="Images"><i class="bi bi-images"></i> <span th:text="${#lists.size(item.images)}">0</span></a>
                         <a class="btn btn-sm btn-outline-secondary" th:if="${item.optioned}" th:href="@{/manage/products/{id}/variants(id=${item.id})}">Variants</a>
                         <a class="btn btn-sm btn-outline-secondary" th:unless="${item.optioned}" th:href="@{/manage/variants/{id}/stock(id=${item.defaultVariant.id})}">Stock</a>
                         <form th:action="@{/manage/products/{id}/delete(id=${item.id})}" method="post"

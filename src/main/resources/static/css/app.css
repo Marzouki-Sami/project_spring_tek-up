@@ -157,3 +157,24 @@ a.status-row:hover { color: var(--shop-accent); }
 .opt-color .swatch { width: 1.7rem; height: 1.7rem; }
 .opt-unavailable .opt-face { opacity: .45; text-decoration: line-through; }
 .opt-unavailable.opt-color .opt-face { text-decoration: none; position: relative; }
+/* Product images */
+.upload-input { max-width: 28rem; }
+.image-frame { position: relative; aspect-ratio: 4 / 3; border-radius: .6rem; overflow: hidden; background: var(--shop-page); }
+.image-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-badge { position: absolute; top: .5rem; left: .5rem; }
+.image-card form { margin: 0; }
+.product-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.product-art.has-image { background: var(--shop-page); }
+.cart-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: .75rem; display: block; }
+.gallery .carousel-inner { border-radius: 1.25rem; background: var(--shop-surface); border: 1px solid var(--shop-line); }
+.gallery .carousel-item img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: contain; display: block; background: var(--shop-surface); }
+.gallery .carousel-control-prev, .gallery .carousel-control-next { width: 3.25rem; }
+.gallery .carousel-control-icon { display: inline-flex; align-items: center; justify-content: center; width: 2.4rem; height: 2.4rem; border-radius: 50%;
+    background: rgba(0, 0, 0, .45); color: #fff; font-size: 1.1rem; }
+.gallery .carousel-control-prev:hover .carousel-control-icon, .gallery .carousel-control-next:hover .carousel-control-icon { background: rgba(0, 0, 0, .65); }
+.gallery-thumbs { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
+.gallery-thumb { padding: 0; width: 4.5rem; height: 4.5rem; border: 2px solid transparent; border-radius: .6rem; overflow: hidden; background: var(--shop-surface); opacity: .7; transition: opacity .12s, border-color .12s; }
+.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-thumb:hover { opacity: 1; }
+.gallery-thumb.active { opacity: 1; border-color: var(--shop-accent); }
+.gallery-counter { position: absolute; right: .75rem; bottom: .75rem; z-index: 2; padding: .15rem .6rem; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; font-size: .8rem; }

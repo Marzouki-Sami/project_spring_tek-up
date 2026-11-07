@@ -14,7 +14,10 @@
         <div class="col-lg-8">
             <div class="panel p-0">
                 <div class="cart-line" th:each="line : ${cart.lines}">
-                    <div class="cart-thumb" th:classappend="'art-' + ${line.product.subcategory.category.id % 6}"><i class="bi bi-bag-heart"></i></div>
+                    <div class="cart-thumb" th:classappend="${line.product.primaryImage == null} ? 'art-' + ${line.product.subcategory.category.id % 6}">
+                        <img th:if="${line.product.primaryImage != null}" th:src="${line.product.primaryImage.thumbUrl}" th:alt="${line.product.name}" width="56" height="56">
+                        <i class="bi bi-bag-heart" th:unless="${line.product.primaryImage != null}"></i>
+                    </div>
                     <div class="cart-info">
                         <a class="fw-semibold text-decoration-none" th:href="@{/products/{id}(id=${line.product.id})}" th:text="${line.product.name}">Product</a>
                         <div class="text-secondary small" th:if="${line.variant.label != null}" th:text="${line.variant.label}">Size: M</div>

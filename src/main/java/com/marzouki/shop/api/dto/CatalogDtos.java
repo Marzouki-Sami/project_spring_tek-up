@@ -30,15 +30,23 @@ public final class CatalogDtos {
         }
     }
 
+    public record ImageResponse(String url, String thumbnailUrl, String alt, int width, int height) {
+        public static ImageResponse of(com.marzouki.shop.media.ProductImage i) {
+            return new ImageResponse(i.getUrl(), i.getThumbUrl(), i.getAltText(), i.getWidth(), i.getHeight());
+        }
+    }
+
     public record ProductResponse(Long id, String sku, String name, String description, BigDecimal price, int stock,
                                   boolean active, Long categoryId, String category, Long subcategoryId,
-                                  String subcategory, String productType, List<VariantResponse> variants) {
+                                  String subcategory, String productType, List<VariantResponse> variants,
+                                  List<ImageResponse> images) {
         public static ProductResponse of(Product p) {
             return new ProductResponse(p.getId(), p.getSku(), p.getName(), p.getDescription(), p.getPrice(),
                     p.getStock(), p.isActive(), p.getSubcategory().getCategory().getId(),
                     p.getSubcategory().getCategory().getTitle(), p.getSubcategory().getId(),
                     p.getSubcategory().getTitle(), p.getProductType() == null ? null : p.getProductType().getName(),
-                    p.getVariants().stream().map(VariantResponse::of).toList());
+                    p.getVariants().stream().map(VariantResponse::of).toList(),
+                    p.getImages().stream().map(ImageResponse::of).toList());
         }
     }
     public record PageResponse<T>(List<T> content, int page, int size, long totalElements, int totalPages) {

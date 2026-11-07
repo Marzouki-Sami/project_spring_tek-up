@@ -2,7 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
 <article th:fragment="card(product)" class="product-card">
-    <div class="product-art" th:classappend="'art-' + ${product.subcategory.category.id % 6}"><i class="bi bi-bag-heart"></i></div>
+    <div class="product-art" th:classappend="${product.primaryImage != null} ? 'has-image' : 'art-' + ${product.subcategory.category.id % 6}">
+        <img th:if="${product.primaryImage != null}" th:src="${product.primaryImage.thumbUrl}" th:alt="${product.primaryImage.altText != null} ? ${product.primaryImage.altText} : ${product.name}" loading="lazy" width="400" height="300">
+        <i class="bi bi-bag-heart" th:unless="${product.primaryImage != null}"></i>
+    </div>
     <div class="body">
         <span class="cat" th:text="${product.subcategory.category.title + ' · ' + product.subcategory.title}">Category</span>
         <h3><a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.name}">Product</a></h3>

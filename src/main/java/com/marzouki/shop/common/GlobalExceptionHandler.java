@@ -25,4 +25,12 @@ public class GlobalExceptionHandler {
         model.addAttribute("message", ex.getMessage());
         return "error/message";
     }
+
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    public String tooLarge(Model model) {
+        model.addAttribute("title", "Upload too large");
+        model.addAttribute("message", "Each image can be at most 5 MB, and an upload at most 30 MB in total.");
+        return "error/message";
+    }
 }
