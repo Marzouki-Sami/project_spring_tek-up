@@ -54,6 +54,12 @@ into a tested, containerised application.
 - **REST API** (`/api`, interactive docs at `/api/docs`): public catalog search, manager-only product
   changes, and register, log in, refresh and log out with short-lived JWT access tokens and rotating
   refresh tokens.
+- **Orders API**: POST /api/orders places an order from a list of variants, a coupon and either a saved
+  address or a typed one. It needs an Idempotency-Key header: a retry with the same key and body returns
+  the same order (Idempotent-Replayed: true) instead of ordering twice, even when retries arrive at the
+  same moment, and a different body under the same key is refused. Customers list, read and cancel their
+  own orders; managers list, filter and move any order along its workflow under /api/manage/orders.
+  Errors are RFC 9457 problem documents.
 
 ## Security
 
