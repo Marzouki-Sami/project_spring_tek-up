@@ -44,6 +44,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
 
     long countByActiveTrue();
 
+    /** Id and creation time of the active products, for the sitemap; no entities are loaded. */
+    @Query("select p.id, p.createdAt from Product p where p.active = true order by p.id")
+    List<Object[]> sitemapEntries(Pageable limit);
+
     java.util.Optional<Product> findBySkuIgnoreCase(String sku);
 
     @EntityGraph(attributePaths = {"subcategory", "subcategory.category"})

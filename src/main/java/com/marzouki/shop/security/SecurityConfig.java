@@ -58,7 +58,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_PAGES = {
         "/", "/products", "/products/**", "/cart", "/cart/**", "/login", "/register", "/verify-email", "/forgot-password", "/reset-password", "/error", "/error/**",
-        "/css/**", "/js/**", "/images/**", "/media/**", "/webjars/**", "/favicon.ico", "/actuator/health", "/actuator/health/**"
+        "/robots.txt", "/sitemap.xml", "/css/**", "/js/**", "/images/**", "/media/**", "/webjars/**", "/favicon.ico", "/actuator/health", "/actuator/health/**"
     };
 
     @Bean

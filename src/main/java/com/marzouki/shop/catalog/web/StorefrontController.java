@@ -34,6 +34,7 @@ public class StorefrontController {
 
     private final ProductRepository products;
     private final ProductService productService;
+    private final com.marzouki.shop.seo.SeoService seo;
     private final com.marzouki.shop.catalog.RelatedProducts relatedProducts;
     private final SubcategoryRepository subcategoryRepository;
     private final CategoryRepository categories;
@@ -46,6 +47,7 @@ public class StorefrontController {
         java.util.List<Product> latest = products.findTop8ByActiveTrueOrderByCreatedAtDescIdDesc();
         ProductViews.warm(latest);
         model.addAttribute("latest", latest);
+        model.addAttribute("seo", seo.home());
         model.addAttribute("categories", categories.findAllByOrderByTitleAsc());
         return "storefront/home";
     }
@@ -60,6 +62,7 @@ public class StorefrontController {
         model.addAttribute("subcategories", query.getCategory() == null ? java.util.List.<Subcategory>of()
                 : subcategoryRepository.findByCategoryIdOrderByTitleAsc(query.getCategory()));
         model.addAttribute("sorts", ShopQuery.SORTS);
+        model.addAttribute("seo", seo.shop(query, result.isFirst()));
         return "storefront/products";
     }
     @GetMapping("/products/{id}")
@@ -72,6 +75,7 @@ public class StorefrontController {
         model.addAttribute("related", relatedProducts.forProduct(id));
         model.addAttribute("reviews", engagement.reviewsFor(id));
         model.addAttribute("average", engagement.averageRating(id));
+        model.addAttribute("seo", seo.product(product, engagement.averageRating(id), engagement.reviewsFor(id).size()));
         model.addAttribute("reviewForm", new ReviewForm());
         if (me != null) {
             model.addAttribute("wished", engagement.isWished(me.getId(), id));

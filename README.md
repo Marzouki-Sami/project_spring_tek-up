@@ -59,6 +59,12 @@ into a tested, containerised application.
 - **Back in stock**: when an item that was sold out has stock again, customers who have it in their saved
   basket or whose wishlist holds its product get an email, at most once a week per item, unless they turned
   it off in their profile. Orders cancelled while an item was sold out count too.
+- **SEO basics**: every public page has a description, a canonical address and Open Graph / Twitter
+  preview tags; product pages add schema.org Product data (price, availability, rating) that cannot break
+  out of its script tag; filtered, sorted and paged lists are marked 
+oindex; /robots.txt keeps the back
+  office, account and API out and /sitemap.xml lists the active products. Set APP_BASE_URL to the public
+  address.
 - **Reviews and wishlist**: verified buyers can rate and review a product (one review each, editable);
   signed-in users keep a wishlist.
 - **Coupons** (`/manage/coupons`): percentage discount with an optional expiry date and usage limit.
@@ -156,6 +162,20 @@ With email on, customers must confirm their address before checking out.
 The schema is owned by Flyway migrations in `src/main/resources/db/migration`; Hibernate only
 validates that the entities match it.
 
+## Behind Nginx
+
+`deploy/nginx/shop.conf` is a ready-made reverse-proxy configuration that rate limits what is worth limiting
+(password guessing and sign-up: 6 attempts a minute per address, the API token endpoints, API order
+placement, and a generous ceiling for everything else) and caches pictures and static files. Limits apply to
+POSTs only on the sign-in pages, so opening them is never slowed. Try it with the shop in Docker:
+
+```bash
+docker compose -f compose.yaml -f deploy/compose.nginx.yaml up --build     # then open http://localhost:8080
+```
+
+Behind your own proxy set `FORWARD_HEADERS=framework` so the audit log and limits see the visitor's real
+address (leave it unset when the app is reachable directly, otherwise anyone could forge it), and keep
+`SESSION_COOKIE_SECURE` at its default once HTTPS is in place. CI checks that the configuration is valid.
 ## Project layout
 
 ```
